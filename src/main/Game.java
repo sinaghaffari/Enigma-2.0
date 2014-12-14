@@ -4,11 +4,11 @@ import static org.lwjgl.opengl.GL11.*;
 
 import java.awt.Font;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.util.*;
 
 import map.Chunk;
 import map.ChunkManager;
@@ -102,7 +102,22 @@ public class Game {
 			vec = vec.add(SVector2D.createVectorGeometrically(Math.toRadians(-30), distanceBetweenBalls));
 		}
 	}
-	public static void main(String[] args) throws LWJGLException {
+	public static void main(String[] args) throws LWJGLException, URISyntaxException {
+		String os= System.getProperty("os.name");
+		if(os.startsWith("Mac"))
+			os= "macosx";
+		else if (os.startsWith("Windows"))
+			os = "windows";
+		else if (os.startsWith("Linux"))
+			os = "linux";
+		File resourceFile = new File(ClassLoader.getSystemResource("").toURI());
+		String resourcePath = resourceFile.getAbsolutePath();
+		if (resourcePath.endsWith("bin")) {
+			resourcePath = resourceFile.getParentFile().getAbsolutePath();
+		}
+		System.out.println(resourcePath);
+		System.setProperty("org.lwjgl.librarypath", resourcePath + "/lib/native/" + os);
+
 		map=new Map("Enigma Survival.map");
 		//map=new Map("Empty.map");
 		setUpDisplay();
@@ -186,6 +201,7 @@ public class Game {
 				Mouse.setGrabbed(false);
 				MenuMain.onUpdate();
 				MenuMain.onRender();
+				TTF.drawString(100, 100, ClassLoader.getSystemResource("").toString());
 			}
 			Display.update();
 			Display.sync(60);
