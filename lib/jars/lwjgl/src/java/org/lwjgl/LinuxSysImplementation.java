@@ -39,8 +39,8 @@ import java.lang.UnsatisfiedLinkError;
 /**
  *
  * @author elias_naur <elias_naur@users.sourceforge.net>
- * @version $Revision: 3604 $
- * $Id: LinuxSysImplementation.java 3604 2011-08-06 13:18:49Z kappa1 $
+ * @version $Revision$
+ * $Id$
  */
 final class LinuxSysImplementation extends J2SESysImplementation {
 	private static final int JNI_VERSION = 19;
@@ -71,7 +71,7 @@ final class LinuxSysImplementation extends J2SESysImplementation {
 		// Linux may as well resort to pure Java hackery, as there's no Linux native way of doing it
 		// right anyway.
 
-		String[] browsers = {"xdg-open", "firefox", "mozilla", "opera", "konqueror", "nautilus", "galeon", "netscape"};
+		String[] browsers = {"sensible-browser", "xdg-open", "google-chrome", "chromium", "firefox", "iceweasel", "mozilla", "opera", "konqueror", "nautilus", "galeon", "netscape"};
 
 		for ( final String browser : browsers ) {
 			try {

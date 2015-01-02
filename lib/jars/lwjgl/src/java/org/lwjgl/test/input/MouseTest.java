@@ -46,8 +46,8 @@ import static org.lwjgl.util.glu.GLU.*;
  * Mouse test
  *
  * @author Brian Matzon <brian@matzon.dk>
- * @version $Revision: 3596 $
- * $Id: MouseTest.java 3596 2011-07-21 22:52:16Z matzon $
+ * @version $Revision$
+ * $Id$
  */
 public class MouseTest {
   /** Direction mouse has moved */

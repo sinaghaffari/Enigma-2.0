@@ -49,9 +49,9 @@ import static org.lwjgl.opengl.GL11.*;
  * An AWT rendering context.
  * <p/>
  *
- * @author $Author: spasi $
- *         $Id: AWTGLCanvas.java 3633 2011-09-03 19:08:27Z spasi $
- * @version $Revision: 3633 $
+ * @author $Author$
+ *         $Id$
+ * @version $Revision$
  */
 public class AWTGLCanvas extends Canvas implements DrawableLWJGL, ComponentListener, HierarchyListener {
 

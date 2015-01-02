@@ -38,8 +38,12 @@ package org.lwjgl.opengl;
  * @author elias_naur
  */
 
+import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.lang.reflect.Method;
 import java.nio.*;
-import java.awt.Canvas;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.LWJGLUtil;
@@ -48,6 +52,8 @@ import org.lwjgl.MemoryUtil;
 import org.lwjgl.input.Cursor;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengles.EGL;
+
+import javax.swing.*;
 
 final class WindowsDisplay implements DisplayImplementation {
 	private static final int GAMMA_LENGTH = 256;
@@ -80,8 +86,10 @@ final class WindowsDisplay implements DisplayImplementation {
 	private static final int WM_SYSKEYDOWN					  = 260;
 	private static final int WM_SYSCHAR                          = 262;
 	private static final int WM_CHAR                          = 258;
+	private static final int WM_GETICON						  = 0x007F;
 	private static final int WM_SETICON						  = 0x0080;
 	private static final int WM_SETCURSOR                     = 0x0020;
+	private static final int WM_MOUSEACTIVATE                 = 0x0021;
 
 	private static final int WM_QUIT						  = 0x0012;
 	private static final int WM_SYSCOMMAND					  = 0x0112;
@@ -150,9 +158,9 @@ final class WindowsDisplay implements DisplayImplementation {
 
 	private static final int WS_THICKFRAME 		= 0x00040000;
 	private static final int WS_MAXIMIZEBOX		= 0x00010000;
-	
+
 	private static final int HTCLIENT			= 0x01;
-	
+
 	private static final int MK_XBUTTON1		= 0x0020;
 	private static final int MK_XBUTTON2		= 0x0040;
 	private static final int XBUTTON1			= 0x0001;
@@ -163,8 +171,13 @@ final class WindowsDisplay implements DisplayImplementation {
 	private static boolean cursor_clipped;
 	private WindowsDisplayPeerInfo peer_info;
 	private Object current_cursor;
-	private Canvas parent;
+
 	private static boolean hasParent;
+
+	private Canvas parent;
+	private long parent_hwnd;
+	private FocusAdapter parent_focus_tracker;
+	private AtomicBoolean parent_focused;
 
 	private WindowsKeyboard keyboard;
 	private WindowsMouse mouse;
@@ -183,7 +196,6 @@ final class WindowsDisplay implements DisplayImplementation {
 	private boolean inAppActivate;
 	private boolean resized;
 	private boolean resizable;
-	private boolean maximized;
 	private int x;
 	private int y;
 	private int width;
@@ -194,10 +206,20 @@ final class WindowsDisplay implements DisplayImplementation {
 
 	private long small_icon;
 	private long large_icon;
+		private boolean iconsLoaded;
 
 	private int captureMouse = -1;
         private boolean trackingMouse;
         private boolean mouseInside;
+
+	static {
+		try {
+			Method windowProc = WindowsDisplay.class.getDeclaredMethod("handleMessage", long.class, int.class, long.class, long.class, long.class);
+			setWindowProc(windowProc);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	WindowsDisplay() {
 		current_display = this;
@@ -209,12 +231,14 @@ final class WindowsDisplay implements DisplayImplementation {
 		isMinimized = false;
 		isFocused = false;
 		redoMakeContextCurrent = false;
-		maximized = false;
 		this.parent = parent;
 		hasParent = parent != null;
-		long parent_hwnd = parent != null ? getHwnd(parent) : 0;
+		parent_hwnd = parent != null ? getHwnd(parent) : 0;
 		this.hwnd = nCreateWindow(x, y, mode.getWidth(), mode.getHeight(), Display.isFullscreen() || isUndecorated(), parent != null, parent_hwnd);
-		this.resizable=false;
+		if ( Display.isResizable() && parent == null ) {
+			setResizable(true);
+		}
+
 		if (hwnd == 0) {
 			throw new LWJGLException("Failed to create window");
 		}
@@ -238,12 +262,22 @@ final class WindowsDisplay implements DisplayImplementation {
 			updateWidthAndHeight();
 
 			if ( parent == null ) {
-				if(Display.isResizable()) {
-					setResizable(true);
-				}
 				setForegroundWindow(getHwnd());
-				setFocus(getHwnd());
+			} else {
+				parent_focused = new AtomicBoolean(false);
+				parent.addFocusListener(parent_focus_tracker = new FocusAdapter() {
+					public void focusGained(FocusEvent e) {
+						parent_focused.set(true);
+						clearAWTFocus();
+					}
+				});
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						clearAWTFocus();
+					}
+				});
 			}
+			grabFocus();
 		} catch (LWJGLException e) {
 			nReleaseDC(hwnd, hdc);
 			nDestroyWindow(hwnd);
@@ -276,6 +310,11 @@ final class WindowsDisplay implements DisplayImplementation {
 	}
 
 	public void destroyWindow() {
+		if ( parent != null ) {
+			parent.removeFocusListener(parent_focus_tracker);
+			parent_focus_tracker = null;
+		}
+
 		nReleaseDC(hwnd, hdc);
 		nDestroyWindow(hwnd);
 		freeLargeIcon();
@@ -323,7 +362,7 @@ final class WindowsDisplay implements DisplayImplementation {
 	/*
 	 * Called when the application is alt-tabbed to or from
 	 */
-	private void appActivate(boolean active) {
+	private void appActivate(boolean active, long millis) {
 		if (inAppActivate) {
 			return;
 		}
@@ -334,31 +373,47 @@ final class WindowsDisplay implements DisplayImplementation {
 				restoreDisplayMode();
 			}
 			if (parent == null) {
-				if(maximized) {
-					showWindow(getHwnd(), SW_MAXIMIZE);
-				} else {
-					showWindow(getHwnd(), SW_RESTORE);
-				}
 				setForegroundWindow(getHwnd());
-				setFocus(getHwnd());
 			}
+			setFocus(getHwnd());
 			redoMakeContextCurrent = true;
 			if (Display.isFullscreen())
 				updateClipping();
-
+		} else {
 			if ( keyboard != null )
-				keyboard.fireLostKeyEvents();
-		} else if (Display.isFullscreen()) {
-			showWindow(getHwnd(), SW_SHOWMINNOACTIVE);
-			resetDisplayMode();
-		} else
-			updateClipping();
+				keyboard.releaseAll(millis);
+			if ( Display.isFullscreen() ) {
+				showWindow(getHwnd(), SW_SHOWMINNOACTIVE);
+				resetDisplayMode();
+			} else
+				updateClipping();
+		}
 		updateCursor();
 		inAppActivate = false;
 	}
 	private static native void showWindow(long hwnd, int mode);
 	private static native void setForegroundWindow(long hwnd);
 	private static native void setFocus(long hwnd);
+
+	private void clearAWTFocus() {
+		// This is needed so that the last focused component AWT remembers is NOT our Canvas
+		WindowsDisplay.this.parent.setFocusable(false);
+		WindowsDisplay.this.parent.setFocusable(true);
+
+		// Clear AWT focus owner
+		KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
+	}
+
+	private void grabFocus() {
+		if ( parent == null )
+			setFocus(getHwnd());
+		else
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					parent.requestFocus();
+				}
+			});
+	}
 
 	private void restoreDisplayMode() {
 		try {
@@ -496,9 +551,11 @@ final class WindowsDisplay implements DisplayImplementation {
 
 	public void update() {
 		nUpdate();
-		if (parent != null && parent.isFocusOwner()) {
+
+		if ( !isFocused && parent != null && parent_focused.compareAndSet(true, false) ) {
 			setFocus(getHwnd());
 		}
+
 		if (redoMakeContextCurrent) {
 			redoMakeContextCurrent = false;
 			/**
@@ -635,11 +692,10 @@ final class WindowsDisplay implements DisplayImplementation {
 
 	/* Keyboard */
 	public void createKeyboard() throws LWJGLException {
-		keyboard = new WindowsKeyboard(getHwnd());
+		keyboard = new WindowsKeyboard();
 	}
 
 	public void destroyKeyboard() {
-		keyboard.destroy();
 		keyboard = null;
 	}
 
@@ -752,6 +808,23 @@ final class WindowsDisplay implements DisplayImplementation {
 				large_icon = large_new_icon;
 				used++;
 				done_large = true;
+
+				// Problem: The taskbar icon won't update until Windows sends a WM_GETICON to our window proc and we reply. But this method is usually called
+				// on init and it might take a while before the next call to nUpdate (because of resources being loaded, etc). So we wait for the next
+				// WM_GETICON message (usually received about 100ms after WM_SETICON) to make sure the taskbar icon has updated before we return to the user.
+				// (We wouldn't need to do this if the event loop was running continuously on its own thread.)
+				iconsLoaded = false;
+
+				// Track how long the wait takes and give up at 500ms, just in case.
+				long time = System.nanoTime();
+				long MAX_WAIT = 500L * 1000L * 1000L;
+				while ( true ) {
+					nUpdate();
+					if ( iconsLoaded || MAX_WAIT < System.nanoTime() - time )
+						break;
+
+					Thread.yield();
+				}
 			}
 		}
 
@@ -779,10 +852,6 @@ final class WindowsDisplay implements DisplayImplementation {
 				captureMouse = -1;
 				nReleaseCapture();
 			}
-		}
-
-		if (parent != null && !isFocused) {
-			setFocus(getHwnd());
 		}
 	}
 
@@ -815,14 +884,16 @@ final class WindowsDisplay implements DisplayImplementation {
 	}
 
 	private void handleKeyButton(long wParam, long lParam, long millis) {
+		if ( keyboard == null )
+			return;
+
 		byte previous_state = (byte)((lParam >>> 30) & 0x1);
 		byte state = (byte)(1 - ((lParam >>> 31) & 0x1));
 		boolean repeat = state == previous_state; // Repeat message
 		byte extended = (byte)((lParam >>> 24) & 0x1);
 		int scan_code = (int)((lParam >>> 16) & 0xFF);
-		if (keyboard != null) {
-			keyboard.handleKey((int)wParam, scan_code, extended != 0, state, millis, repeat);
-		}
+
+		keyboard.handleKey((int)wParam, scan_code, extended != 0, state, millis, repeat);
 	}
 
 	private static int transformY(long hwnd, int y) {
@@ -833,14 +904,16 @@ final class WindowsDisplay implements DisplayImplementation {
 
 	private static native void clientToScreen(long hwnd, IntBuffer point);
 
-	private static int handleMessage(long hwnd, int msg, long wParam, long lParam, long millis) {
+	private static native void setWindowProc(Method windowProc);
+
+	private static long handleMessage(long hwnd, int msg, long wParam, long lParam, long millis) {
 		if (current_display != null)
 			return current_display.doHandleMessage(hwnd, msg, wParam, lParam, millis);
 		else
 			return defWindowProc(hwnd, msg, wParam, lParam);
 	}
 
-	private static native int defWindowProc(long hwnd, int msg, long wParam, long lParam);
+	private static native long defWindowProc(long hwnd, int msg, long wParam, long lParam);
 
 	private void checkCursorState() {
 		updateClipping();
@@ -863,11 +936,31 @@ final class WindowsDisplay implements DisplayImplementation {
 		checkCursorState();
 	}
 
-	private int doHandleMessage(long hwnd, int msg, long wParam, long lParam, long millis) {
+	private long doHandleMessage(long hwnd, int msg, long wParam, long lParam, long millis) {
+		/*switch ( msg ) {
+			case 0x0:
+			case 0x0020:
+			case 0x0084:
+			case WM_MOUSEMOVE:
+				break;
+			default:
+				WindowsEventDebug.printMessage(msg, wParam, lParam);
+		}*/
+
+		if ( parent != null && !isFocused ) {
+			switch ( msg ) {
+				case WM_LBUTTONDOWN:
+				case WM_RBUTTONDOWN:
+				case WM_MBUTTONDOWN:
+				case WM_XBUTTONDOWN:
+					sendMessage(parent_hwnd, msg, wParam, lParam);
+			}
+		}
+
 		switch (msg) {
 			// disable screen saver and monitor power down messages which wreak havoc
 			case WM_ACTIVATE:
-				switch ((int)wParam) {
+				/*switch ((int)wParam) {
 					case WA_ACTIVE:
 					case WA_CLICKACTIVE:
 						appActivate(true);
@@ -875,13 +968,12 @@ final class WindowsDisplay implements DisplayImplementation {
 					case WA_INACTIVE:
 						appActivate(false);
 						break;
-				}
-				return 0;
+				}*/
+				return 0L;
 			case WM_SIZE:
 				switch ((int)wParam) {
 					case SIZE_RESTORED:
 					case SIZE_MAXIMIZED:
-						maximized = ((int)wParam) == SIZE_MAXIMIZED;
 						resized = true;
 						updateWidthAndHeight();
 						setMinimized(false);
@@ -890,15 +982,11 @@ final class WindowsDisplay implements DisplayImplementation {
 						setMinimized(true);
 						break;
 				}
-				return defWindowProc(hwnd, msg, wParam, lParam);
-			case WM_ENTERSIZEMOVE:
-				return defWindowProc(hwnd, msg, wParam, lParam);
-			case WM_EXITSIZEMOVE:
-				return defWindowProc(hwnd, msg, wParam, lParam);
+				break;
 			case WM_SIZING:
 				resized = true;
 				updateWidthAndHeight();
-				return defWindowProc(hwnd, msg, wParam, lParam);
+				break;
 			case WM_SETCURSOR:
 				if((lParam & 0xFFFF) == HTCLIENT) {
 					// if the cursor is inside the client area, reset it
@@ -908,13 +996,20 @@ final class WindowsDisplay implements DisplayImplementation {
 				} else {
 					// let Windows handle cursors outside the client area for resizing, etc.
 					return defWindowProc(hwnd, msg, wParam, lParam);
-				}				
+				}
 			case WM_KILLFOCUS:
-				appActivate(false);
-				return 0;
+				appActivate(false, millis);
+				return 0L;
 			case WM_SETFOCUS:
-				appActivate(true);
-				return 0;
+				appActivate(true, millis);
+				return 0L;
+			case WM_MOUSEACTIVATE:
+				if ( parent != null ) {
+					if ( !isFocused )
+						grabFocus();
+					return 3L; // MA_NOACTIVATE
+				}
+				break;
 			case WM_MOUSEMOVE:
 				int xPos = (int)(short)(lParam & 0xFFFF);
 				int yPos = transformY(getHwnd(), (int)(short)((lParam >> 16) & 0xFFFF));
@@ -924,29 +1019,29 @@ final class WindowsDisplay implements DisplayImplementation {
                                 if(!trackingMouse) {
                                     trackingMouse = nTrackMouseEvent(hwnd);
                                 }
-				return 0;
+				return 0L;
 			case WM_MOUSEWHEEL:
 				int dwheel = (int)(short)((wParam >> 16) & 0xFFFF);
 				handleMouseScrolled(dwheel, millis);
-				return 0;
+				return 0L;
 			case WM_LBUTTONDOWN:
 				handleMouseButton(0, 1, millis);
-				return 0;
+				return 0L;
 			case WM_LBUTTONUP:
 				handleMouseButton(0, 0, millis);
-				return 0;
+				return 0L;
 			case WM_RBUTTONDOWN:
 				handleMouseButton(1, 1, millis);
-				return 0;
+				return 0L;
 			case WM_RBUTTONUP:
 				handleMouseButton(1, 0, millis);
-				return 0;
+				return 0L;
 			case WM_MBUTTONDOWN:
 				handleMouseButton(2, 1, millis);
-				return 0;
+				return 0L;
 			case WM_MBUTTONUP:
 				handleMouseButton(2, 0, millis);
-				return 0;
+				return 0L;
 			case WM_XBUTTONUP:
 				if((wParam >> 16) == XBUTTON1) {
 					handleMouseButton(3, 0, millis);
@@ -964,8 +1059,13 @@ final class WindowsDisplay implements DisplayImplementation {
 			case WM_SYSCHAR:
 			case WM_CHAR:
 				handleChar(wParam, lParam, millis);
-				return 0;
+				return 0L;
 			case WM_SYSKEYUP:
+				// Disable WM_SYSCOMMAND/SC_KEYMENU
+				if ( wParam == WindowsKeycodes.VK_MENU || wParam == WindowsKeycodes.VK_F10 ) {
+					handleKeyButton(wParam, lParam, millis);
+					return 0L;
+				}
 				/* Fall through */
 			case WM_KEYUP:
 				// SysRq apparently only generates WM_KEYUP, so we'll fake a WM_KEYDOWN
@@ -982,31 +1082,27 @@ final class WindowsDisplay implements DisplayImplementation {
 				/* Fall through */
 			case WM_KEYDOWN:
 				handleKeyButton(wParam, lParam, millis);
-				return defWindowProc(hwnd, msg, wParam, lParam);
+				break;
 			case WM_QUIT:
 				close_requested = true;
-				return 0;
+				return 0L;
 			case WM_SYSCOMMAND:
 				switch ((int)(wParam & 0xfff0)) {
-					case SC_KEYMENU:
-					case SC_MOUSEMENU:
 					case SC_SCREENSAVE:
 					case SC_MONITORPOWER:
-						return 0;
+						return 0L;
 					case SC_CLOSE:
 						close_requested = true;
-						return 0;
-					default:
-						break;
+						return 0L;
 				}
-				return defWindowProc(hwnd, msg, wParam, lParam);
+				break;
 			case WM_PAINT:
 				is_dirty = true;
-				return defWindowProc(hwnd, msg, wParam, lParam);
+				break;
             case WM_MOUSELEAVE:
             	mouseInside = false;
                 trackingMouse = false;
-                return defWindowProc(hwnd, msg, wParam, lParam);
+	            break;
 			case WM_CANCELMODE:
 				nReleaseCapture();
 				/* fall through */
@@ -1015,21 +1111,24 @@ final class WindowsDisplay implements DisplayImplementation {
 					handleMouseButton(captureMouse, 0, millis);
 					captureMouse = -1;
 				}
-				return 0;
+				return 0L;
 			case WM_WINDOWPOSCHANGED:
 				if(getWindowRect(hwnd, rect_buffer)) {
 					rect.copyFromBuffer(rect_buffer);
-					x = rect.top;
-					y = rect.bottom;
+					x = rect.left;
+					y = rect.top;
 				} else {
 					LWJGLUtil.log("WM_WINDOWPOSCHANGED: Unable to get window rect");
 				}
-				return defWindowProc(hwnd, msg, wParam, lParam);				
-			default:
-				return defWindowProc(hwnd, msg, wParam, lParam);
+				break;
+			case WM_GETICON:
+				iconsLoaded = true;
+				break;
 		}
+
+		return defWindowProc(hwnd, msg, wParam, lParam);
 	}
-	
+
 	private native boolean getWindowRect(long hwnd, IntBuffer rectBuffer);
 
 	public int getX() {
@@ -1055,34 +1154,45 @@ final class WindowsDisplay implements DisplayImplementation {
 	}
 
 	public void setResizable(boolean resizable) {
-		if(this.resizable != resizable) {
-			long style = getWindowLongPtr(hwnd, GWL_STYLE);
-			long styleex = getWindowLongPtr(hwnd, GWL_EXSTYLE);
+		if ( this.resizable == resizable )
+			return;
 
-			// update frame style
-			if(resizable && !Display.isFullscreen()) {
-				setWindowLongPtr(hwnd, GWL_STYLE, style |= (WS_THICKFRAME | WS_MAXIMIZEBOX));
-			} else {
-				setWindowLongPtr(hwnd, GWL_STYLE, style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX));
-			}
-
-			// from the existing client rect, determine the new window rect
-			// based on the style changes - using AdjustWindowRectEx.
-			getClientRect(hwnd, rect_buffer);
-			rect.copyFromBuffer(rect_buffer);
-			adjustWindowRectEx(rect_buffer, style, false, styleex);
-			rect.copyFromBuffer(rect_buffer);
-
-			// force a frame update and resize accordingly
-			setWindowPos(hwnd, HWND_TOP, 0, 0, rect.right - rect.left, rect.bottom - rect.top, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
-
-			updateWidthAndHeight();
-			resized = false;
-		}
+		this.resized = false;
 		this.resizable = resizable;
+
+		int style = (int)getWindowLongPtr(hwnd, GWL_STYLE);
+		int styleex = (int)getWindowLongPtr(hwnd, GWL_EXSTYLE);
+
+		// update frame style
+		setWindowLongPtr(
+			hwnd,
+			GWL_STYLE,
+			style = resizable && !Display.isFullscreen()
+			        ? (style | (WS_THICKFRAME | WS_MAXIMIZEBOX))
+			        : (style & ~(WS_THICKFRAME | WS_MAXIMIZEBOX))
+		);
+
+		// from the existing client rect, determine the new window rect
+		// based on the style changes - using AdjustWindowRectEx.
+		getGlobalClientRect(hwnd, rect);
+		rect.copyToBuffer(rect_buffer);
+		adjustWindowRectEx(rect_buffer, style, false, styleex);
+		rect.copyFromBuffer(rect_buffer);
+
+		// Apply the style changes
+		setWindowPos(
+			hwnd, 0L,
+			rect.left,
+			rect.top,
+			rect.right - rect.left,
+			rect.bottom - rect.top,
+			SWP_NOZORDER | SWP_FRAMECHANGED
+		);
+
+		updateWidthAndHeight();
 	}
 
-	private native boolean adjustWindowRectEx(IntBuffer rectBuffer, long style, boolean menu, long styleex);
+	private native boolean adjustWindowRectEx(IntBuffer rectBuffer, int style, boolean menu, int styleex);
 
 	public boolean wasResized() {
 		if(resized) {
@@ -1092,39 +1202,49 @@ final class WindowsDisplay implements DisplayImplementation {
 		return false;
 	}
 
+	public float getPixelScaleFactor() {
+		return 1f;
+	}
+
 	private static final class Rect {
-		public int top;
-		public int bottom;
-		public int left;
-		public int right;
+
+		public int
+			left,
+			top,
+			right,
+			bottom;
 
 		public void copyToBuffer(IntBuffer buffer) {
-			buffer.put(0, top).put(1, bottom).put(2, left).put(3, right);
+			buffer
+				.put(0, left)
+				.put(1, top)
+				.put(2, right)
+				.put(3, bottom);
 		}
 
 		public void copyFromBuffer(IntBuffer buffer) {
-			top = buffer.get(0);
-			bottom = buffer.get(1);
-			left  = buffer.get(2);
-			right = buffer.get(3);
+			left = buffer.get(0);
+			top = buffer.get(1);
+			right = buffer.get(2);
+			bottom = buffer.get(3);
 		}
 
 		public void offset(int offset_x, int offset_y) {
 			left += offset_x;
-			right += offset_x;
 			top += offset_y;
+			right += offset_x;
 			bottom += offset_y;
 		}
 
 		public static void intersect(Rect r1, Rect r2, Rect dst) {
-			dst.top = Math.max(r1.top, r2.top);
-			dst.bottom = Math.min(r1.bottom, r2.bottom);
 			dst.left = Math.max(r1.left, r2.left);
+			dst.top = Math.max(r1.top, r2.top);
 			dst.right = Math.min(r1.right, r2.right);
+			dst.bottom = Math.min(r1.bottom, r2.bottom);
 		}
 
 		public String toString() {
-			return "Rect: top = " + top + " bottom = " + bottom + " left = " + left + " right = " + right + ", width: " + (right - left) + ", height: " + (bottom - top);
+			return "Rect: left = " + left + " top = " + top + " right = " + right + " bottom = " + bottom + ", width: " + (right - left) + ", height: " + (bottom - top);
 		}
 	}
 }

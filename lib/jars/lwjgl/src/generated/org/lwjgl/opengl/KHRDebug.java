@@ -81,12 +81,6 @@ public final class KHRDebug {
 		GL_DEBUG_SEVERITY_NOTIFICATION = 0x826B;
 
 	/**
-	 * Returned by GetError: 
-	 */
-	public static final int GL_STACK_UNDERFLOW = 0x504,
-		GL_STACK_OVERFLOW = 0x503;
-
-	/**
 	 *  Tokens accepted or provided by the &lt;identifier&gt; parameters of
 	 *  ObjectLabel and GetObjectLabel:
 	 */

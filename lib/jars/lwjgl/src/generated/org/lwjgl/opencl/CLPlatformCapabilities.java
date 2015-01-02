@@ -12,6 +12,9 @@ public class CLPlatformCapabilities {
 	public final boolean OpenCL11;
 	public final boolean OpenCL12;
 
+	final boolean CL_APPLE_ContextLoggingFunctions;
+	public final boolean CL_APPLE_SetMemObjectDestructor;
+	public final boolean CL_APPLE_gl_sharing;
 	public final boolean CL_KHR_d3d10_sharing;
 	public final boolean CL_KHR_gl_event;
 	public final boolean CL_KHR_gl_sharing;
@@ -36,6 +39,9 @@ public class CLPlatformCapabilities {
 		}
 
 		final Set<String> extensions = APIUtil.getExtensions(extensionList);
+		CL_APPLE_ContextLoggingFunctions = extensions.contains("cl_APPLE_ContextLoggingFunctions") && CLCapabilities.CL_APPLE_ContextLoggingFunctions;
+		CL_APPLE_SetMemObjectDestructor = extensions.contains("cl_APPLE_SetMemObjectDestructor") && CLCapabilities.CL_APPLE_SetMemObjectDestructor;
+		CL_APPLE_gl_sharing = extensions.contains("cl_APPLE_gl_sharing") && CLCapabilities.CL_APPLE_gl_sharing;
 		CL_KHR_d3d10_sharing = extensions.contains("cl_khr_d3d10_sharing");
 		CL_KHR_gl_event = extensions.contains("cl_khr_gl_event") && CLCapabilities.CL_KHR_gl_event;
 		CL_KHR_gl_sharing = extensions.contains("cl_khr_gl_sharing") && CLCapabilities.CL_KHR_gl_sharing;
@@ -56,6 +62,9 @@ public class CLPlatformCapabilities {
 		buf.append("OpenCL ").append(majorVersion).append('.').append(minorVersion);
 
 		buf.append(" - Extensions: ");
+		if ( CL_APPLE_ContextLoggingFunctions ) buf.append("cl_apple_contextloggingfunctions ");
+		if ( CL_APPLE_SetMemObjectDestructor ) buf.append("cl_apple_setmemobjectdestructor ");
+		if ( CL_APPLE_gl_sharing ) buf.append("cl_apple_gl_sharing ");
 		if ( CL_KHR_d3d10_sharing ) buf.append("cl_khr_d3d10_sharing ");
 		if ( CL_KHR_gl_event ) buf.append("cl_khr_gl_event ");
 		if ( CL_KHR_gl_sharing ) buf.append("cl_khr_gl_sharing ");

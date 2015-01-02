@@ -38,8 +38,8 @@ import org.lwjgl.LWJGLException;
 /**
  *
  * @author elias_naur <elias_naur@users.sourceforge.net>
- * @version $Revision: 3632 $
- * $Id: MacOSXDisplayPeerInfo.java 3632 2011-09-03 18:52:45Z spasi $
+ * @version $Revision$
+ * $Id$
  */
 final class MacOSXDisplayPeerInfo extends MacOSXCanvasPeerInfo {
 	private boolean locked;

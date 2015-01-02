@@ -82,7 +82,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_GL20_nglShaderSource(JNIEnv *env, j
 
 JNIEXPORT void JNICALL Java_org_lwjgl_opengl_GL20_nglShaderSource3(JNIEnv *env, jclass clazz, jint shader, jint count, jlong strings, jlong length, jlong function_pointer) {
 	const GLchar *strings_address = (const GLchar *)(intptr_t)strings;
-	unsigned int _str_i;
+	int _str_i;
 	GLchar *_str_address;
 	GLchar **strings_str = (GLchar **) malloc(count * sizeof(GLchar *));
 	const GLint *length_address = (const GLint *)(intptr_t)length;
@@ -445,6 +445,12 @@ JNIEXPORT jobject JNICALL Java_org_lwjgl_opengl_GL20_nglGetVertexAttribPointerv(
 	GLvoid * __result;
 	glGetVertexAttribPointerv(index, pname, &__result);
 	return safeNewBuffer(env, __result, result_size);
+}
+
+JNIEXPORT void JNICALL Java_org_lwjgl_opengl_GL20_nglGetVertexAttribPointerv2(JNIEnv *env, jclass clazz, jint index, jint pname, jlong pointer, jlong function_pointer) {
+	GLvoid *pointer_address = (GLvoid *)(intptr_t)pointer;
+	glGetVertexAttribPointervPROC glGetVertexAttribPointerv = (glGetVertexAttribPointervPROC)((intptr_t)function_pointer);
+	glGetVertexAttribPointerv(index, pname, pointer_address);
 }
 
 JNIEXPORT void JNICALL Java_org_lwjgl_opengl_GL20_nglBindAttribLocation(JNIEnv *env, jclass clazz, jint program, jint index, jlong name, jlong function_pointer) {

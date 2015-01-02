@@ -56,29 +56,13 @@ import static org.lwjgl.opengl.NVPathRendering.*;
  * Thrown by the debug build library of the LWJGL if any OpenGL operation causes an error.
  *
  * @author cix_foo <cix_foo@users.sourceforge.net>
- * @version $Revision: 3787 $
- *          $Id: GLChecks.java 3787 2012-08-18 14:00:45Z spasi $
+ * @version $Revision$
+ *          $Id$
  */
 class GLChecks {
 
 	/** Static methods only! */
 	private GLChecks() {
-	}
-
-	static int getBufferObjectSize(ContextCapabilities caps, int buffer_enum) {
-		return glGetBufferParameteri(buffer_enum, GL_BUFFER_SIZE);
-	}
-
-	static int getBufferObjectSizeARB(ContextCapabilities caps, int buffer_enum) {
-		return glGetBufferParameteriARB(buffer_enum, GL_BUFFER_SIZE_ARB);
-	}
-
-	static int getBufferObjectSizeATI(ContextCapabilities caps, int buffer) {
-		return glGetObjectBufferiATI(buffer, GL_OBJECT_BUFFER_SIZE_ATI);
-	}
-
-	static int getNamedBufferObjectSize(ContextCapabilities caps, int buffer) {
-		return glGetNamedBufferParameterEXT(buffer, GL_BUFFER_SIZE);
 	}
 
 	/** Helper method to ensure that array buffer objects are disabled. If they are enabled, we'll throw an OpenGLException */

@@ -31,10 +31,10 @@
  */
 
 /**
- * $Id: context.m 3638 2011-09-15 17:22:43Z spasi $
+ * $Id$
  *
  * @author elias_naur <elias_naur@users.sourceforge.net>
- * @version $Revision: 3638 $
+ * @version $Revision$
  */
 
 #import <CoreFoundation/CoreFoundation.h>
@@ -91,7 +91,22 @@ NSOpenGLPixelFormat *choosePixelFormat(JNIEnv *env, jobject pixel_format, bool g
 	int bpp;
 	jclass cls_pixel_format = (*env)->GetObjectClass(env, pixel_format);
 	if (use_display_bpp)
-		bpp = CGDisplayBitsPerPixel(kCGDirectMainDisplay);
+	{
+		if (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_5) { // if OS X 10.6+ use newer api
+			CGDisplayModeRef mode = CGDisplayCopyDisplayMode(kCGDirectMainDisplay);
+			CFStringRef pixEnc = CGDisplayModeCopyPixelEncoding(mode);
+			if (CFStringCompare(pixEnc, CFSTR(IO32BitDirectPixels), kCFCompareCaseInsensitive) == kCFCompareEqualTo)
+				bpp = 32;
+			else if(CFStringCompare(pixEnc, CFSTR(IO16BitDirectPixels), kCFCompareCaseInsensitive) == kCFCompareEqualTo)
+				bpp = 16;
+			else if(CFStringCompare(pixEnc, CFSTR(IO8BitIndexedPixels), kCFCompareCaseInsensitive) == kCFCompareEqualTo)
+				bpp = 8;
+			else
+				bpp = CGDisplayBitsPerPixel(kCGDirectMainDisplay);
+		} else {
+			bpp = CGDisplayBitsPerPixel(kCGDirectMainDisplay);
+		}
+	}
 	else
 		bpp = (int)(*env)->GetIntField(env, pixel_format, (*env)->GetFieldID(env, cls_pixel_format, "bpp", "I"));
 
@@ -105,9 +120,9 @@ NSOpenGLPixelFormat *choosePixelFormat(JNIEnv *env, jobject pixel_format, bool g
 	bool stereo = (bool)(*env)->GetBooleanField(env, pixel_format, (*env)->GetFieldID(env, cls_pixel_format, "stereo", "Z"));
 	bool floating_point = (bool)(*env)->GetBooleanField(env, pixel_format, (*env)->GetFieldID(env, cls_pixel_format, "floating_point", "Z"));
 	// TODO: Add floating_point_packed attribute below
-	bool floating_point_packed = (bool)(*env)->GetBooleanField(env, pixel_format, (*env)->GetFieldID(env, cls_pixel_format, "floating_point_packed", "Z"));
+	//bool floating_point_packed = (bool)(*env)->GetBooleanField(env, pixel_format, (*env)->GetFieldID(env, cls_pixel_format, "floating_point_packed", "Z"));
 	// TODO: Add sRGB attribute below
-	bool sRGB = (bool)(*env)->GetBooleanField(env, pixel_format, (*env)->GetFieldID(env, cls_pixel_format, "sRGB", "Z"));
+	//bool sRGB = (bool)(*env)->GetBooleanField(env, pixel_format, (*env)->GetFieldID(env, cls_pixel_format, "sRGB", "Z"));
 
 	attrib_list_t attribs;
 	jboolean allow_software_acceleration = getBooleanProperty(env, "org.lwjgl.opengl.Display.allowSoftwareOpenGL");

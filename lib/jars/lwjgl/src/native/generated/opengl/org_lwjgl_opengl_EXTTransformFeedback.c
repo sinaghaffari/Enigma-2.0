@@ -38,7 +38,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_EXTTransformFeedback_nglEndTransfor
 
 JNIEXPORT void JNICALL Java_org_lwjgl_opengl_EXTTransformFeedback_nglTransformFeedbackVaryingsEXT(JNIEnv *env, jclass clazz, jint program, jint count, jlong varyings, jint bufferMode, jlong function_pointer) {
 	const GLchar *varyings_address = (const GLchar *)(intptr_t)varyings;
-	unsigned int _str_i;
+	int _str_i;
 	GLchar *_str_address;
 	GLchar **varyings_str = (GLchar **) malloc(count * sizeof(GLchar *));
 	glTransformFeedbackVaryingsEXTPROC glTransformFeedbackVaryingsEXT = (glTransformFeedbackVaryingsEXTPROC)((intptr_t)function_pointer);
@@ -46,7 +46,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_EXTTransformFeedback_nglTransformFe
 	_str_address = (GLchar *)varyings_address;
 	while ( _str_i < count ) {
 		varyings_str[_str_i++] = _str_address;
-		_str_address += strlen(_str_address) + 1;
+		_str_address += strlen((const char *)_str_address) + 1;
 	}
 	glTransformFeedbackVaryingsEXT(program, count, (const GLchar **)varyings_str, bufferMode);
 	free(varyings_str);

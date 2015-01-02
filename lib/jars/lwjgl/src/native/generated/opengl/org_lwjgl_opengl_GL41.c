@@ -159,7 +159,7 @@ JNIEXPORT jint JNICALL Java_org_lwjgl_opengl_GL41_nglCreateShaderProgramv(JNIEnv
 
 JNIEXPORT jint JNICALL Java_org_lwjgl_opengl_GL41_nglCreateShaderProgramv2(JNIEnv *env, jclass clazz, jint type, jint count, jlong strings, jlong function_pointer) {
 	const GLchar *strings_address = (const GLchar *)(intptr_t)strings;
-	unsigned int _str_i;
+	int _str_i;
 	GLchar *_str_address;
 	GLchar **strings_str = (GLchar **) malloc(count * sizeof(GLchar *));
 	glCreateShaderProgramvPROC glCreateShaderProgramv = (glCreateShaderProgramvPROC)((intptr_t)function_pointer);
@@ -168,7 +168,7 @@ JNIEXPORT jint JNICALL Java_org_lwjgl_opengl_GL41_nglCreateShaderProgramv2(JNIEn
 	_str_address = (GLchar *)strings_address;
 	while ( _str_i < count ) {
 		strings_str[_str_i++] = _str_address;
-		_str_address += strlen(_str_address) + 1;
+		_str_address += strlen((const char *)_str_address) + 1;
 	}
 	__result = glCreateShaderProgramv(type, count, (const GLchar **)&strings_str);
 	free(strings_str);
@@ -176,7 +176,7 @@ JNIEXPORT jint JNICALL Java_org_lwjgl_opengl_GL41_nglCreateShaderProgramv2(JNIEn
 }
 
 JNIEXPORT jint JNICALL Java_org_lwjgl_opengl_GL41_nglCreateShaderProgramv3(JNIEnv *env, jclass clazz, jint type, jint count, jobjectArray strings, jlong function_pointer) {
-	unsigned int _ptr_i;
+	int _ptr_i;
 	jobject _ptr_object;
 	GLchar **strings_ptr = (GLchar **) malloc(count * sizeof(GLchar *));
 	glCreateShaderProgramvPROC glCreateShaderProgramv = (glCreateShaderProgramvPROC)((intptr_t)function_pointer);
@@ -184,7 +184,7 @@ JNIEXPORT jint JNICALL Java_org_lwjgl_opengl_GL41_nglCreateShaderProgramv3(JNIEn
 	_ptr_i = 0;
 	while ( _ptr_i < count ) {
 		_ptr_object = (*env)->GetObjectArrayElement(env, strings, _ptr_i);
-		strings_ptr[_ptr_i++] = (GLchar *)(intptr_t)getPointerWrapperAddress(env, _ptr_object);
+		strings_ptr[_ptr_i++] = (GLchar *)(*env)->GetDirectBufferAddress(env, _ptr_object);
 	}
 	__result = glCreateShaderProgramv(type, count, (const GLchar **)strings_ptr);
 	free(strings_ptr);
@@ -623,13 +623,13 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_GL41_nglDepthRangeIndexed(JNIEnv *e
 	glDepthRangeIndexed(index, n, f);
 }
 
-JNIEXPORT void JNICALL Java_org_lwjgl_opengl_GL41_nglGetFloati_v(JNIEnv *env, jclass clazz, jint target, jint index, jlong data, jlong function_pointer) {
+JNIEXPORT void JNICALL Java_org_lwjgl_opengl_GL41_nglGetFloati_1v(JNIEnv *env, jclass clazz, jint target, jint index, jlong data, jlong function_pointer) {
 	GLfloat *data_address = (GLfloat *)(intptr_t)data;
 	glGetFloati_vPROC glGetFloati_v = (glGetFloati_vPROC)((intptr_t)function_pointer);
 	glGetFloati_v(target, index, data_address);
 }
 
-JNIEXPORT void JNICALL Java_org_lwjgl_opengl_GL41_nglGetDoublei_v(JNIEnv *env, jclass clazz, jint target, jint index, jlong data, jlong function_pointer) {
+JNIEXPORT void JNICALL Java_org_lwjgl_opengl_GL41_nglGetDoublei_1v(JNIEnv *env, jclass clazz, jint target, jint index, jlong data, jlong function_pointer) {
 	GLdouble *data_address = (GLdouble *)(intptr_t)data;
 	glGetDoublei_vPROC glGetDoublei_v = (glGetDoublei_vPROC)((intptr_t)function_pointer);
 	glGetDoublei_v(target, index, data_address);

@@ -40,13 +40,12 @@ package org.lwjgl.util.generator.opengl;
 
 import org.lwjgl.util.generator.NativeType;
 
-import java.lang.annotation.Target;
 import java.lang.annotation.ElementType;
-
-import com.sun.mirror.type.PrimitiveType;
+import java.lang.annotation.Target;
+import javax.lang.model.type.TypeKind;
 
 @NativeType
-@Target({ElementType.PARAMETER, ElementType.METHOD})
+@Target({ ElementType.PARAMETER, ElementType.METHOD })
 public @interface GLvoid {
-	PrimitiveType.Kind value() default PrimitiveType.Kind.BYTE;
+	TypeKind value() default TypeKind.BYTE;
 }

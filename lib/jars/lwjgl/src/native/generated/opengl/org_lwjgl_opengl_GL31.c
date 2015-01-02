@@ -50,7 +50,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_GL31_nglTexBuffer(JNIEnv *env, jcla
 
 JNIEXPORT void JNICALL Java_org_lwjgl_opengl_GL31_nglGetUniformIndices(JNIEnv *env, jclass clazz, jint program, jint uniformCount, jlong uniformNames, jlong uniformIndices, jlong function_pointer) {
 	const GLchar *uniformNames_address = (const GLchar *)(intptr_t)uniformNames;
-	unsigned int _str_i;
+	int _str_i;
 	GLchar *_str_address;
 	GLchar **uniformNames_str = (GLchar **) malloc(uniformCount * sizeof(GLchar *));
 	GLuint *uniformIndices_address = (GLuint *)(intptr_t)uniformIndices;
@@ -59,7 +59,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_GL31_nglGetUniformIndices(JNIEnv *e
 	_str_address = (GLchar *)uniformNames_address;
 	while ( _str_i < uniformCount ) {
 		uniformNames_str[_str_i++] = _str_address;
-		_str_address += strlen(_str_address) + 1;
+		_str_address += strlen((const char *)_str_address) + 1;
 	}
 	glGetUniformIndices(program, uniformCount, (const GLchar **)uniformNames_str, uniformIndices_address);
 	free(uniformNames_str);

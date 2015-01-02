@@ -390,7 +390,7 @@ static jboolean JNICALL Java_org_lwjgl_opengles_GLES30_nglIsVertexArray(JNIEnv *
 	return __result;
 }
 
-static void JNICALL Java_org_lwjgl_opengles_GLES30_nglGetIntegeri_v(JNIEnv *env, jclass clazz, jint value, jint index, jlong data) {
+static void JNICALL Java_org_lwjgl_opengles_GLES30_nglGetIntegeri_1v(JNIEnv *env, jclass clazz, jint value, jint index, jlong data) {
 	GLint *data_address = (GLint *)(intptr_t)data;
 	glGetIntegeri_v(value, index, data_address);
 }
@@ -413,14 +413,14 @@ static void JNICALL Java_org_lwjgl_opengles_GLES30_nglBindBufferBase(JNIEnv *env
 
 static void JNICALL Java_org_lwjgl_opengles_GLES30_nglTransformFeedbackVaryings(JNIEnv *env, jclass clazz, jint program, jint count, jlong varyings, jint bufferMode) {
 	const GLchar *varyings_address = (const GLchar *)(intptr_t)varyings;
-	unsigned int _str_i;
+	int _str_i;
 	GLchar *_str_address;
 	GLchar **varyings_str = (GLchar **) malloc(count * sizeof(GLchar *));
 	_str_i = 0;
 	_str_address = (GLchar *)varyings_address;
 	while ( _str_i < count ) {
 		varyings_str[_str_i++] = _str_address;
-		_str_address += strlen(_str_address) + 1;
+		_str_address += strlen((const char *)_str_address) + 1;
 	}
 	glTransformFeedbackVaryings(program, count, (const GLchar **)varyings_str, bufferMode);
 	free(varyings_str);
@@ -549,7 +549,7 @@ static void JNICALL Java_org_lwjgl_opengles_GLES30_nglCopyBufferSubData(JNIEnv *
 
 static void JNICALL Java_org_lwjgl_opengles_GLES30_nglGetUniformIndices(JNIEnv *env, jclass clazz, jint program, jint uniformCount, jlong uniformNames, jlong uniformIndices) {
 	const GLchar *uniformNames_address = (const GLchar *)(intptr_t)uniformNames;
-	unsigned int _str_i;
+	int _str_i;
 	GLchar *_str_address;
 	GLchar **uniformNames_str = (GLchar **) malloc(uniformCount * sizeof(GLchar *));
 	GLuint *uniformIndices_address = (GLuint *)(intptr_t)uniformIndices;
@@ -557,7 +557,7 @@ static void JNICALL Java_org_lwjgl_opengles_GLES30_nglGetUniformIndices(JNIEnv *
 	_str_address = (GLchar *)uniformNames_address;
 	while ( _str_i < uniformCount ) {
 		uniformNames_str[_str_i++] = _str_address;
-		_str_address += strlen(_str_address) + 1;
+		_str_address += strlen((const char *)_str_address) + 1;
 	}
 	glGetUniformIndices(program, uniformCount, (const GLchar **)uniformNames_str, uniformIndices_address);
 	free(uniformNames_str);
@@ -632,7 +632,7 @@ static void JNICALL Java_org_lwjgl_opengles_GLES30_nglGetInteger64v(JNIEnv *env,
 	glGetInteger64v(pname, data_address);
 }
 
-static void JNICALL Java_org_lwjgl_opengles_GLES30_nglGetInteger64i_v(JNIEnv *env, jclass clazz, jint value, jint index, jlong data) {
+static void JNICALL Java_org_lwjgl_opengles_GLES30_nglGetInteger64i_1v(JNIEnv *env, jclass clazz, jint value, jint index, jlong data) {
 	GLint64 *data_address = (GLint64 *)(intptr_t)data;
 	glGetInteger64i_v(value, index, data_address);
 }
@@ -804,7 +804,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengles_GLES30_initNativeStubs(JNIEnv *en
 		{"nglDeleteVertexArrays", "(IJ)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglDeleteVertexArrays, "glDeleteVertexArrays", (void *)&glDeleteVertexArrays, false},
 		{"nglGenVertexArrays", "(IJ)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglGenVertexArrays, "glGenVertexArrays", (void *)&glGenVertexArrays, false},
 		{"nglIsVertexArray", "(I)Z", (void *)&Java_org_lwjgl_opengles_GLES30_nglIsVertexArray, "glIsVertexArray", (void *)&glIsVertexArray, false},
-		{"nglGetIntegeri_v", "(IIJ)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglGetIntegeri_v, "glGetIntegeri_v", (void *)&glGetIntegeri_v, false},
+		{"nglGetIntegeri_v", "(IIJ)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglGetIntegeri_1v, "glGetIntegeri_v", (void *)&glGetIntegeri_v, false},
 		{"nglBeginTransformFeedback", "(I)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglBeginTransformFeedback, "glBeginTransformFeedback", (void *)&glBeginTransformFeedback, false},
 		{"nglEndTransformFeedback", "()V", (void *)&Java_org_lwjgl_opengles_GLES30_nglEndTransformFeedback, "glEndTransformFeedback", (void *)&glEndTransformFeedback, false},
 		{"nglBindBufferRange", "(IIIJJ)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglBindBufferRange, "glBindBufferRange", (void *)&glBindBufferRange, false},
@@ -850,7 +850,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengles_GLES30_initNativeStubs(JNIEnv *en
 		{"nglClientWaitSync", "(JIJ)I", (void *)&Java_org_lwjgl_opengles_GLES30_nglClientWaitSync, "glClientWaitSync", (void *)&glClientWaitSync, false},
 		{"nglWaitSync", "(JIJ)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglWaitSync, "glWaitSync", (void *)&glWaitSync, false},
 		{"nglGetInteger64v", "(IJ)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglGetInteger64v, "glGetInteger64v", (void *)&glGetInteger64v, false},
-		{"nglGetInteger64i_v", "(IIJ)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglGetInteger64i_v, "glGetInteger64i_v", (void *)&glGetInteger64i_v, true},
+		{"nglGetInteger64i_v", "(IIJ)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglGetInteger64i_1v, "glGetInteger64i_v", (void *)&glGetInteger64i_v, false},
 		{"nglGetSynciv", "(JIIJJ)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglGetSynciv, "glGetSynciv", (void *)&glGetSynciv, false},
 		{"nglGetBufferParameteri64v", "(IIJ)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglGetBufferParameteri64v, "glGetBufferParameteri64v", (void *)&glGetBufferParameteri64v, false},
 		{"nglGenSamplers", "(IJ)V", (void *)&Java_org_lwjgl_opengles_GLES30_nglGenSamplers, "glGenSamplers", (void *)&glGenSamplers, false},

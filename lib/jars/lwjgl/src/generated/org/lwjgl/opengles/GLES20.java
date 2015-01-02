@@ -1010,6 +1010,7 @@ public final class GLES20 {
 	 * <p>
 	 * @deprecated Will be removed in 3.0. Use {@link #glGetBufferParameteri} instead. 
 	 */
+	@Deprecated
 	public static int glGetBufferParameter(int target, int pname) {
 		return GLES20.glGetBufferParameteri(target, pname);
 	}
@@ -1051,6 +1052,7 @@ public final class GLES20 {
 	 * <p>
 	 * @deprecated Will be removed in 3.0. Use {@link #glGetFramebufferAttachmentParameteri} instead. 
 	 */
+	@Deprecated
 	public static int glGetFramebufferAttachmentParameter(int target, int attachment, int pname) {
 		return GLES20.glGetFramebufferAttachmentParameteri(target, attachment, pname);
 	}
@@ -1086,6 +1088,7 @@ public final class GLES20 {
 	 * <p>
 	 * @deprecated Will be removed in 3.0. Use {@link #glGetProgrami} instead. 
 	 */
+	@Deprecated
 	public static int glGetProgram(int program, int pname) {
 		return GLES20.glGetProgrami(program, pname);
 	}
@@ -1125,6 +1128,7 @@ public final class GLES20 {
 	 * <p>
 	 * @deprecated Will be removed in 3.0. Use {@link #glGetRenderbufferParameteri} instead. 
 	 */
+	@Deprecated
 	public static int glGetRenderbufferParameter(int target, int pname) {
 		return GLES20.glGetRenderbufferParameteri(target, pname);
 	}
@@ -1147,6 +1151,7 @@ public final class GLES20 {
 	 * <p>
 	 * @deprecated Will be removed in 3.0. Use {@link #glGetShaderi} instead. 
 	 */
+	@Deprecated
 	public static int glGetShader(int shader, int pname) {
 		return GLES20.glGetShaderi(shader, pname);
 	}

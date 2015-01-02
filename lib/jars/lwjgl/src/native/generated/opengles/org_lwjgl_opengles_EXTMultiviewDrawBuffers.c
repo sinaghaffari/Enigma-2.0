@@ -21,7 +21,7 @@ static void JNICALL Java_org_lwjgl_opengles_EXTMultiviewDrawBuffers_nglDrawBuffe
 	glDrawBuffersIndexedEXT(n, location_address, indices_address);
 }
 
-static void JNICALL Java_org_lwjgl_opengles_EXTMultiviewDrawBuffers_nglGetIntegeri_vEXT(JNIEnv *env, jclass clazz, jint target, jint index, jlong data) {
+static void JNICALL Java_org_lwjgl_opengles_EXTMultiviewDrawBuffers_nglGetIntegeri_1vEXT(JNIEnv *env, jclass clazz, jint target, jint index, jlong data) {
 	GLint *data_address = (GLint *)(intptr_t)data;
 	glGetIntegeri_vEXT(target, index, data_address);
 }
@@ -30,7 +30,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengles_EXTMultiviewDrawBuffers_initNativ
 	JavaMethodAndExtFunction functions[] = {
 		{"nglReadBufferIndexedEXT", "(II)V", (void *)&Java_org_lwjgl_opengles_EXTMultiviewDrawBuffers_nglReadBufferIndexedEXT, "glReadBufferIndexedEXT", (void *)&glReadBufferIndexedEXT, false},
 		{"nglDrawBuffersIndexedEXT", "(IJJ)V", (void *)&Java_org_lwjgl_opengles_EXTMultiviewDrawBuffers_nglDrawBuffersIndexedEXT, "glDrawBuffersIndexedEXT", (void *)&glDrawBuffersIndexedEXT, false},
-		{"nglGetIntegeri_vEXT", "(IIJ)V", (void *)&Java_org_lwjgl_opengles_EXTMultiviewDrawBuffers_nglGetIntegeri_vEXT, "glGetIntegeri_vEXT", (void *)&glGetIntegeri_vEXT, false},
+		{"nglGetIntegeri_vEXT", "(IIJ)V", (void *)&Java_org_lwjgl_opengles_EXTMultiviewDrawBuffers_nglGetIntegeri_1vEXT, "glGetIntegeri_vEXT", (void *)&glGetIntegeri_vEXT, false},
 
 	};
 	int num_functions = NUMFUNCTIONS(functions);

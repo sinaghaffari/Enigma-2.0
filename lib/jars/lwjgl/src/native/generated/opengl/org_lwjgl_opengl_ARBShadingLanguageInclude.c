@@ -25,7 +25,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_ARBShadingLanguageInclude_nglDelete
 
 JNIEXPORT void JNICALL Java_org_lwjgl_opengl_ARBShadingLanguageInclude_nglCompileShaderIncludeARB(JNIEnv *env, jclass clazz, jint shader, jint count, jlong path, jlong length, jlong function_pointer) {
 	const GLchar *path_address = (const GLchar *)(intptr_t)path;
-	unsigned int _str_i;
+	int _str_i;
 	GLchar *_str_address;
 	GLchar **path_str = (GLchar **) malloc(count * sizeof(GLchar *));
 	const GLint *length_address = (const GLint *)(intptr_t)length;
@@ -34,7 +34,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_ARBShadingLanguageInclude_nglCompil
 	_str_address = (GLchar *)path_address;
 	while ( _str_i < count ) {
 		path_str[_str_i++] = _str_address;
-		_str_address += strlen(_str_address) + 1;
+		_str_address += strlen((const char *)_str_address) + 1;
 	}
 	glCompileShaderIncludeARB(shader, count, (const GLchar **)path_str, length_address);
 	free(path_str);
@@ -42,7 +42,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_ARBShadingLanguageInclude_nglCompil
 
 JNIEXPORT void JNICALL Java_org_lwjgl_opengl_ARBShadingLanguageInclude_nglCompileShaderIncludeARB2(JNIEnv *env, jclass clazz, jint shader, jint count, jlong path, jlong length, jlong function_pointer) {
 	const GLchar *path_address = (const GLchar *)(intptr_t)path;
-	unsigned int _str_i;
+	int _str_i;
 	GLchar *_str_address;
 	GLchar **path_str = (GLchar **) malloc(count * sizeof(GLchar *));
 	const GLint *length_address = (const GLint *)(intptr_t)length;

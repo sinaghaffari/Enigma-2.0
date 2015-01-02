@@ -13,8 +13,8 @@ public final class ARBClearBufferObject {
 		GL43.glClearBufferData(target, internalformat, format, type, data);
 	}
 
-	public static void glClearBufferSubData(int target, int internalformat, long offset, int format, int type, ByteBuffer data) {
-		GL43.glClearBufferSubData(target, internalformat, offset, format, type, data);
+	public static void glClearBufferSubData(int target, int internalformat, long offset, long size, int format, int type, ByteBuffer data) {
+		GL43.glClearBufferSubData(target, internalformat, offset, size, format, type, data);
 	}
 
 	public static void glClearNamedBufferDataEXT(int buffer, int internalformat, int format, int type, ByteBuffer data) {
@@ -26,12 +26,12 @@ public final class ARBClearBufferObject {
 	}
 	static native void nglClearNamedBufferDataEXT(int buffer, int internalformat, int format, int type, long data, long function_pointer);
 
-	public static void glClearNamedBufferSubDataEXT(int buffer, int internalformat, long offset, int format, int type, ByteBuffer data) {
+	public static void glClearNamedBufferSubDataEXT(int buffer, int internalformat, long offset, long size, int format, int type, ByteBuffer data) {
 		ContextCapabilities caps = GLContext.getCapabilities();
 		long function_pointer = caps.glClearNamedBufferSubDataEXT;
 		BufferChecks.checkFunctionAddress(function_pointer);
-		BufferChecks.checkDirect(data);
-		nglClearNamedBufferSubDataEXT(buffer, internalformat, offset, data.remaining(), format, type, MemoryUtil.getAddress(data), function_pointer);
+		BufferChecks.checkBuffer(data, 1);
+		nglClearNamedBufferSubDataEXT(buffer, internalformat, offset, size, format, type, MemoryUtil.getAddress(data), function_pointer);
 	}
-	static native void nglClearNamedBufferSubDataEXT(int buffer, int internalformat, long offset, long data_size, int format, int type, long data, long function_pointer);
+	static native void nglClearNamedBufferSubDataEXT(int buffer, int internalformat, long offset, long size, int format, int type, long data, long function_pointer);
 }

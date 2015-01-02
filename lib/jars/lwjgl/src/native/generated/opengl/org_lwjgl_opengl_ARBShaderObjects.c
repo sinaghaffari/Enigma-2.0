@@ -73,7 +73,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_ARBShaderObjects_nglShaderSourceARB
 
 JNIEXPORT void JNICALL Java_org_lwjgl_opengl_ARBShaderObjects_nglShaderSourceARB3(JNIEnv *env, jclass clazz, jint shader, jint count, jlong strings, jlong length, jlong function_pointer) {
 	const GLchar *strings_address = (const GLchar *)(intptr_t)strings;
-	unsigned int _str_i;
+	int _str_i;
 	GLchar *_str_address;
 	GLchar **strings_str = (GLchar **) malloc(count * sizeof(GLchar *));
 	const GLint *length_address = (const GLint *)(intptr_t)length;

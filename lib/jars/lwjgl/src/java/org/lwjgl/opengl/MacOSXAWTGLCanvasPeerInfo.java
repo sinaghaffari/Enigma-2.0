@@ -38,8 +38,8 @@ import java.awt.Canvas;
 /**
  *
  * @author elias_naur <elias_naur@users.sourceforge.net>
- * @version $Revision: 3632 $
- * $Id: MacOSXAWTGLCanvasPeerInfo.java 3632 2011-09-03 18:52:45Z spasi $
+ * @version $Revision$
+ * $Id$
  */
 final class MacOSXAWTGLCanvasPeerInfo extends MacOSXCanvasPeerInfo {
 	private final Canvas component;

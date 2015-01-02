@@ -31,12 +31,12 @@
  */
 
 /**
- * $Id: org_lwjgl_opengl_Display.c 3782 2012-07-14 23:29:21Z matzon $
+ * $Id$
  *
  * Base Windows display
  *
  * @author cix_foo <cix_foo@users.sourceforge.net>
- * @version $Revision: 3782 $
+ * @version $Revision$
  */
 
 #define _PRIVATE_WINDOW_H_
@@ -53,6 +53,9 @@
 
 #define WINDOWCLASSNAME _T("LWJGL")
 
+static jclass windowsDisplayClass;
+static jmethodID javaWindowProc;
+
 /*
  *	WindowProc for the GL window.
  */
@@ -61,10 +64,12 @@ static LRESULT CALLBACK lwjglWindowProc(HWND hWnd,
 							     WPARAM wParam,
 							     LPARAM lParam)
 {
+	/*
 	jclass display_class;
 	jclass display_class_global;
 	jmethodID handleMessage_method;
 	LONG message_time;
+	*/
 	JNIEnv *env = getThreadEnv();
 	if (env != NULL && !(*env)->ExceptionOccurred(env)) {
 		/*
@@ -80,6 +85,8 @@ static LRESULT CALLBACK lwjglWindowProc(HWND hWnd,
 		 * a window is created, where we are sure that the calling class' classloader has
 		 * LWJGL classes in it.
 		 */
+
+		/*
 		display_class_global = (jclass)(LONG_PTR)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		if (display_class_global == NULL) {
 			display_class = (*env)->FindClass(env, "org/lwjgl/opengl/WindowsDisplay");
@@ -91,15 +98,27 @@ static LRESULT CALLBACK lwjglWindowProc(HWND hWnd,
 		}
 		if (display_class_global != NULL) {
 			message_time = GetMessageTime();
-			handleMessage_method = (*env)->GetStaticMethodID(env, display_class_global, "handleMessage", "(JIJJJ)I");
+			handleMessage_method = (*env)->GetStaticMethodID(env, display_class_global, "handleMessage", "(JIJJJ)J");
 			if (handleMessage_method != NULL)
-				return (*env)->CallStaticIntMethod(env, display_class_global, handleMessage_method, (jlong)(intptr_t)hWnd, (jint)msg, (jlong)wParam, (jlong)lParam, (jlong)message_time);
+				return (*env)->CallStaticLongMethod(env, display_class_global, handleMessage_method, (jlong)(intptr_t)hWnd, (jint)msg, (jlong)wParam, (jlong)lParam, (jlong)message_time);
+
 		}
+		*/
+
+		return (*env)->CallStaticLongMethod(
+			env, windowsDisplayClass, javaWindowProc,
+			(jlong)(intptr_t)hWnd, (jint)msg, (jlong)wParam, (jlong)lParam, (jlong)GetMessageTime()
+		);
 	}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-JNIEXPORT jint JNICALL Java_org_lwjgl_opengl_WindowsDisplay_defWindowProc(JNIEnv *env, jclass unused, jlong hWnd, jint msg, jlong wParam, jlong lParam) {
+JNIEXPORT void JNICALL Java_org_lwjgl_opengl_WindowsDisplay_setWindowProc(JNIEnv *env, jclass clazz, jobject method) {
+	windowsDisplayClass = (*env)->NewGlobalRef(env, clazz);
+	javaWindowProc = (*env)->FromReflectedMethod(env, method);
+}
+
+JNIEXPORT jlong JNICALL Java_org_lwjgl_opengl_WindowsDisplay_defWindowProc(JNIEnv *env, jclass unused, jlong hWnd, jint msg, jlong wParam, jlong lParam) {
     return DefWindowProc((HWND)(INT_PTR)hWnd, msg, wParam, lParam);
 }
 
@@ -226,10 +245,10 @@ static void copyBufferToRect(JNIEnv *env, jobject buffer_handle, RECT *rect) {
 		throwFormattedRuntimeException(env, "Buffer size < 4", size);
 		return;
 	}
-	rect->top = buffer[0];
-	rect->bottom = buffer[1];
-	rect->left = buffer[2];
-	rect->right = buffer[3];
+	rect->left = buffer[0];
+	rect->top = buffer[1];
+	rect->right = buffer[2];
+	rect->bottom = buffer[3];
 }
 
 static void copyRectToBuffer(JNIEnv *env, RECT *rect, jobject buffer_handle) {
@@ -239,10 +258,10 @@ static void copyRectToBuffer(JNIEnv *env, RECT *rect, jobject buffer_handle) {
 		throwFormattedRuntimeException(env, "Buffer size < 4", size);
 		return;
 	}
-	buffer[0] = rect->top;
-	buffer[1] = rect->bottom;
-	buffer[2] = rect->left;
-	buffer[3] = rect->right;
+	buffer[0] = rect->left;
+	buffer[1] = rect->top;
+	buffer[2] = rect->right;
+	buffer[3] = rect->bottom;
 }
 
 JNIEXPORT void JNICALL Java_org_lwjgl_opengl_WindowsDisplay_clipCursor(JNIEnv *env, jclass unused, jobject handle_buffer) {
@@ -327,13 +346,10 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_WindowsDisplay_nReshape(JNIEnv *env
 	  FALSE,          // menu-present option
 	  exstyle         // extended window style
 	);
-
 	SetWindowPos(hwnd, HWND_TOP, x, y, clientSize.right - clientSize.left, clientSize.bottom - clientSize.top, SWP_NOZORDER);
 }
 
 static HICON createWindowIcon(JNIEnv *env, jint *pixels, jint width, jint height) {
-	unsigned char col;
-	unsigned char mask;
 	BITMAPV5HEADER bitmapInfo;
 	HBITMAP cursorMask;
 	HBITMAP	colorBitmap;
@@ -345,8 +361,6 @@ static HICON createWindowIcon(JNIEnv *env, jint *pixels, jint width, jint height
 	int imageSize;
 	unsigned char *maskPixels;
 	int widthInBytes;
-	int leftShift;
-	int maskPixelsOff;
 	int scanlineWidth;
 	HBITMAP colorDIB;
 
@@ -475,7 +489,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_WindowsDisplay_getClientRect
 }
 
 JNIEXPORT jboolean JNICALL Java_org_lwjgl_opengl_WindowsDisplay_adjustWindowRectEx
-	(JNIEnv *env, jclass unused, jobject rect_buffer, jlong style, jboolean menu, jlong styleex) {
+	(JNIEnv *env, jclass unused, jobject rect_buffer, jint style, jboolean menu, jint styleex) {
 	jboolean result;
 	RECT clientRect;
 	copyBufferToRect(env, rect_buffer, &clientRect);
@@ -522,4 +536,3 @@ JNIEXPORT jboolean JNICALL Java_org_lwjgl_opengl_WindowsDisplay_nTrackMouseEvent
 		tme.hwndTrack = hwnd;
 		return TrackMouseEvent(&tme);
 }
-

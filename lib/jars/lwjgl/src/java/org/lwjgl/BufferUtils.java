@@ -44,9 +44,9 @@ import java.nio.ShortBuffer;
 /**
  * Some often-used Buffer code for creating native buffers of the appropriate size.
  *
- * @author $Author: spasi $
- * @version $Revision: 3528 $
- * $Id: BufferUtils.java 3528 2011-05-11 00:12:52Z spasi $
+ * @author $Author$
+ * @version $Revision$
+ * $Id$
  */
 
 public final class BufferUtils {

@@ -42,8 +42,8 @@ import org.lwjgl.Sys;
  * </p>
  *
  * @author Brian Matzon <brian@matzon.dk>
- * @version $Revision: 3418 $
- * $Id: AL.java 3418 2010-09-28 21:11:35Z spasi $
+ * @version $Revision$
+ * $Id$
  */
 public final class AL {
 	/** ALCdevice instance. */
@@ -115,8 +115,13 @@ public final class AL {
 		String[] library_names;
 		switch (LWJGLUtil.getPlatform()) {
 			case LWJGLUtil.PLATFORM_WINDOWS:
-				libname = "OpenAL32";
-				library_names = new String[]{"OpenAL64.dll", "OpenAL32.dll"};
+				if ( Sys.is64Bit() ) {
+					libname = "OpenAL64";
+					library_names = new String[]{"OpenAL64.dll"};
+				} else {
+					libname = "OpenAL32";
+					library_names = new String[]{"OpenAL32.dll"};
+				}
 				break;
 			case LWJGLUtil.PLATFORM_LINUX:
 				libname = "openal";

@@ -31,12 +31,12 @@
  */
 
 /**
- * $Id: org_lwjgl_opengl_Pbuffer.c 3561 2011-07-10 16:58:16Z spasi $
+ * $Id$
  *
  * Windows Pbuffer.
  *
  * @author elias_naur <elias_naur@users.sourceforge.net>
- * @version $Revision: 3561 $
+ * @version $Revision$
  */
 
 #include <stdlib.h>

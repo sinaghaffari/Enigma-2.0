@@ -1413,10 +1413,10 @@ public final class CL10 {
 		BufferChecks.checkBuffer(param_value, APIUtil.getSize(sizes));
 		if (param_value_size_ret != null)
 			BufferChecks.checkBuffer(param_value_size_ret, 1);
-		int __result = nclGetProgramInfo2(program.getPointer(), CL_PROGRAM_BINARIES, sizes.remainingByte(), MemoryUtil.getAddress(sizes), MemoryUtil.getAddress(param_value), MemoryUtil.getAddressSafe(param_value_size_ret), function_pointer);
+		int __result = nclGetProgramInfo2(program.getPointer(), CL_PROGRAM_BINARIES, sizes.remaining(), MemoryUtil.getAddress(sizes), MemoryUtil.getAddress(param_value), MemoryUtil.getAddressSafe(param_value_size_ret), function_pointer);
 		return __result;
 	}
-	static native int nclGetProgramInfo2(long program, int param_name, long param_value_size, long sizes, long param_value, long param_value_size_ret, long function_pointer);
+	static native int nclGetProgramInfo2(long program, int param_name, long sizes_len, long sizes, long param_value, long param_value_size_ret, long function_pointer);
 
 	/**
 	 * Overloads clGetProgramInfo.
@@ -1438,10 +1438,10 @@ public final class CL10 {
 		BufferChecks.checkArray(param_value);
 		if (param_value_size_ret != null)
 			BufferChecks.checkBuffer(param_value_size_ret, 1);
-		int __result = nclGetProgramInfo3(program.getPointer(), CL_PROGRAM_BINARIES, param_value.length * PointerBuffer.getPointerSize(), param_value, MemoryUtil.getAddressSafe(param_value_size_ret), function_pointer);
+		int __result = nclGetProgramInfo3(program.getPointer(), CL_PROGRAM_BINARIES, param_value.length, param_value, MemoryUtil.getAddressSafe(param_value_size_ret), function_pointer);
 		return __result;
 	}
-	static native int nclGetProgramInfo3(long program, int param_name, long param_value_size, ByteBuffer[] param_value, long param_value_size_ret, long function_pointer);
+	static native int nclGetProgramInfo3(long program, int param_name, long param_value_len, ByteBuffer[] param_value, long param_value_size_ret, long function_pointer);
 
 	public static int clGetProgramBuildInfo(CLProgram program, CLDevice device, int param_name, ByteBuffer param_value, PointerBuffer param_value_size_ret) {
 		long function_pointer = CLCapabilities.clGetProgramBuildInfo;
@@ -1783,7 +1783,8 @@ public final class CL10 {
 	static CLFunctionAddress clGetExtensionFunctionAddress(ByteBuffer func_name) {
 		long function_pointer = CLCapabilities.clGetExtensionFunctionAddress;
 		BufferChecks.checkFunctionAddress(function_pointer);
-		BufferChecks.checkBuffer(func_name, 1);
+		BufferChecks.checkDirect(func_name);
+		BufferChecks.checkNullTerminated(func_name);
 		CLFunctionAddress __result = new CLFunctionAddress(nclGetExtensionFunctionAddress(MemoryUtil.getAddress(func_name), function_pointer));
 		return __result;
 	}
@@ -1793,7 +1794,7 @@ public final class CL10 {
 	static CLFunctionAddress clGetExtensionFunctionAddress(CharSequence func_name) {
 		long function_pointer = CLCapabilities.clGetExtensionFunctionAddress;
 		BufferChecks.checkFunctionAddress(function_pointer);
-		CLFunctionAddress __result = new CLFunctionAddress(nclGetExtensionFunctionAddress(APIUtil.getBuffer(func_name), function_pointer));
+		CLFunctionAddress __result = new CLFunctionAddress(nclGetExtensionFunctionAddress(APIUtil.getBufferNT(func_name), function_pointer));
 		return __result;
 	}
 }

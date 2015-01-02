@@ -10,8 +10,7 @@ public final class ARBRobustness {
 	/**
 	 * Returned by GetGraphicsResetStatusARB: 
 	 */
-	public static final int GL_NO_ERROR = 0x0,
-		GL_GUILTY_CONTEXT_RESET_ARB = 0x8253,
+	public static final int GL_GUILTY_CONTEXT_RESET_ARB = 0x8253,
 		GL_INNOCENT_CONTEXT_RESET_ARB = 0x8254,
 		GL_UNKNOWN_CONTEXT_RESET_ARB = 0x8255;
 

@@ -31,14 +31,19 @@
  */
 
 /**
- * $Id: org_lwjgl_opengl_AWTSurfaceLock.c 3660 2011-10-11 22:30:55Z kappa1 $
+ * $Id$
  *
  * @author elias_naur <elias_naur@users.sourceforge.net>
- * @version $Revision: 3660 $
+ * @author kappaOne <one.kappa@gmail.com>
+ * @version $Revision$
  */
 
 #include <jni.h>
+#ifdef __MACH__
+#include <JavaVM/jawt_md.h>
+#else
 #include <jawt_md.h>
+#endif
 #include "org_lwjgl_opengl_AWTSurfaceLock.h"
 #include "awt_tools.h"
 #include "common_tools.h"
@@ -49,29 +54,27 @@ JNIEXPORT jobject JNICALL Java_org_lwjgl_opengl_AWTSurfaceLock_createHandle
 }
 
 JNIEXPORT jboolean JNICALL Java_org_lwjgl_opengl_AWTSurfaceLock_lockAndInitHandle
-  (JNIEnv *env, jclass clazz, jobject lock_buffer_handle, jobject canvas, jboolean allowCALayer) {
+  (JNIEnv *env, jclass clazz, jobject lock_buffer_handle, jobject canvas) {
 	JAWT awt;
 	JAWT_DrawingSurface* ds;
 	JAWT_DrawingSurfaceInfo *dsi;
 	AWTSurfaceLock *awt_lock = (AWTSurfaceLock *)(*env)->GetDirectBufferAddress(env, lock_buffer_handle);
     
-    jboolean result = JNI_FALSE;
+	jboolean result = JNI_FALSE;
 	
 	#ifdef __MACH__
-	if (allowCALayer) {
-        //first try CALAYER
-        awt.version = JAWT_VERSION_1_4 | 0x80000000;//JAWT_MACOSX_USE_CALAYER;
-        result = JAWT_GetAWT(env, &awt);
-    }
+	// try get JAWT with JAWT_MACOSX_USE_CALAYER Opt In
+	awt.version = JAWT_VERSION_1_4 | 0x80000000;//JAWT_MACOSX_USE_CALAYER;
+	result = JAWT_GetAWT(env, &awt);
 	#endif
-    
+	
 	if (result == JNI_FALSE) {
-        // now try without CALAYER
-        awt.version = JAWT_VERSION_1_4;
-        if (JAWT_GetAWT(env, &awt) == JNI_FALSE) {
-            throwException(env, "Could not get the JAWT interface");
-            return JNI_FALSE;
-        }
+		// now try without CALAYER
+		awt.version = JAWT_VERSION_1_4;
+		if (JAWT_GetAWT(env, &awt) == JNI_FALSE) {
+			throwException(env, "Could not get the JAWT interface");
+			return JNI_FALSE;
+		}
 	}
 
 	ds = awt.GetDrawingSurface(env, canvas);

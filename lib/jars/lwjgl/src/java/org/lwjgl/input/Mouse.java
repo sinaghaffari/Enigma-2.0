@@ -59,8 +59,8 @@ import org.lwjgl.opengl.InputImplementation;
  * @author cix_foo <cix_foo@users.sourceforge.net>
  * @author elias_naur <elias_naur@users.sourceforge.net>
  * @author Brian Matzon <brian@matzon.dk>
- * @version $Revision: 3771 $
- * $Id: Mouse.java 3771 2012-05-13 12:11:12Z kappa1 $
+ * @version $Revision$
+ * $Id$
  */
 public class Mouse {
 	/** Internal use - event size in bytes */
@@ -433,8 +433,8 @@ public class Mouse {
 	/**
 	 * Gets the next mouse event. You can query which button caused the event by using
 	 * <code>getEventButton()</code> (if any). To get the state of that key, for that event, use
-	 * <code>getEventButtonState</code>. To get the current mouse delta values use <code>getEventDX()</code>,
-	 * <code>getEventDY()</code> and <code>getEventDZ()</code>.
+	 * <code>getEventButtonState</code>. To get the current mouse delta values use <code>getEventDX()</code>
+	 * and <code>getEventDY()</code>.
 	 * @see org.lwjgl.input.Mouse#getEventButton()
 	 * @see org.lwjgl.input.Mouse#getEventButtonState()
 	 * @return true if a mouse event was read, false otherwise

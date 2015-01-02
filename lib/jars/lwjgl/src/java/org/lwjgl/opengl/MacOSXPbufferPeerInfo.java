@@ -38,8 +38,8 @@ import org.lwjgl.LWJGLException;
 /**
  *
  * @author elias_naur <elias_naur@users.sourceforge.net>
- * @version $Revision: 3632 $
- * $Id: MacOSXPbufferPeerInfo.java 3632 2011-09-03 18:52:45Z spasi $
+ * @version $Revision$
+ * $Id$
  */
 final class MacOSXPbufferPeerInfo extends MacOSXPeerInfo {
 	MacOSXPbufferPeerInfo(int width, int height, PixelFormat pixel_format, ContextAttribs attribs) throws LWJGLException {

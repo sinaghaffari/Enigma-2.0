@@ -38,7 +38,7 @@ public final class ATIMapObjectBuffer {
 		BufferChecks.checkFunctionAddress(function_pointer);
 		if (old_buffer != null)
 			BufferChecks.checkDirect(old_buffer);
-		ByteBuffer __result = nglMapObjectBufferATI(buffer, GLChecks.getBufferObjectSizeATI(caps, buffer), old_buffer, function_pointer);
+		ByteBuffer __result = nglMapObjectBufferATI(buffer, ATIVertexArrayObject.glGetObjectBufferiATI(buffer, ATIVertexArrayObject.GL_OBJECT_BUFFER_SIZE_ATI), old_buffer, function_pointer);
 		return LWJGLUtil.CHECKS && __result == null ? null : __result.order(ByteOrder.nativeOrder());
 	}
 	/**

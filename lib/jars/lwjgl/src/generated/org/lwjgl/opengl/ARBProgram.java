@@ -275,6 +275,7 @@ public class ARBProgram {
 	 * <p>
 	 * @deprecated Will be removed in 3.0. Use {@link #glGetProgramiARB} instead. 
 	 */
+	@Deprecated
 	public static int glGetProgramARB(int target, int parameterName) {
 		return ARBProgram.glGetProgramiARB(target, parameterName);
 	}

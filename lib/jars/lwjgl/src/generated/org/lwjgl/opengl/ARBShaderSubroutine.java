@@ -27,9 +27,7 @@ public final class ARBShaderSubroutine {
 	 * Accepted by the &lt;pname&gt; parameter of GetActiveSubroutineUniformiv: 
 	 */
 	public static final int GL_NUM_COMPATIBLE_SUBROUTINES = 0x8E4A,
-		GL_COMPATIBLE_SUBROUTINES = 0x8E4B,
-		GL_UNIFORM_SIZE = 0x8A38,
-		GL_UNIFORM_NAME_LENGTH = 0x8A39;
+		GL_COMPATIBLE_SUBROUTINES = 0x8E4B;
 
 	private ARBShaderSubroutine() {}
 
@@ -37,7 +35,17 @@ public final class ARBShaderSubroutine {
 		return GL40.glGetSubroutineUniformLocation(program, shadertype, name);
 	}
 
+	/** Overloads glGetSubroutineUniformLocation. */
+	public static int glGetSubroutineUniformLocation(int program, int shadertype, CharSequence name) {
+		return GL40.glGetSubroutineUniformLocation(program, shadertype, name);
+	}
+
 	public static int glGetSubroutineIndex(int program, int shadertype, ByteBuffer name) {
+		return GL40.glGetSubroutineIndex(program, shadertype, name);
+	}
+
+	/** Overloads glGetSubroutineIndex. */
+	public static int glGetSubroutineIndex(int program, int shadertype, CharSequence name) {
 		return GL40.glGetSubroutineIndex(program, shadertype, name);
 	}
 

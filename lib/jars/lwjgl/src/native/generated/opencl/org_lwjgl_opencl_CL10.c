@@ -374,7 +374,7 @@ JNIEXPORT jlong JNICALL Java_org_lwjgl_opencl_CL10_nclCreateProgramWithSource(JN
 
 JNIEXPORT jlong JNICALL Java_org_lwjgl_opencl_CL10_nclCreateProgramWithSource2(JNIEnv *env, jclass clazz, jlong context, jint count, jlong strings, jlong lengths, jlong errcode_ret, jlong function_pointer) {
 	const cl_char *strings_address = (const cl_char *)(intptr_t)strings;
-	unsigned int _str_i;
+	int _str_i;
 	cl_char *_str_address;
 	cl_char **strings_str = (cl_char **) malloc(count * sizeof(cl_char *));
 	const size_t *lengths_address = (const size_t *)(intptr_t)lengths;
@@ -393,7 +393,7 @@ JNIEXPORT jlong JNICALL Java_org_lwjgl_opencl_CL10_nclCreateProgramWithSource2(J
 }
 
 JNIEXPORT jlong JNICALL Java_org_lwjgl_opencl_CL10_nclCreateProgramWithSource3(JNIEnv *env, jclass clazz, jlong context, jint count, jobjectArray strings, jlong lengths, jlong errcode_ret, jlong function_pointer) {
-	unsigned int _ptr_i;
+	int _ptr_i;
 	jobject _ptr_object;
 	cl_char **strings_ptr = (cl_char **) malloc(count * sizeof(cl_char *));
 	const size_t *lengths_address = (const size_t *)(intptr_t)lengths;
@@ -403,7 +403,7 @@ JNIEXPORT jlong JNICALL Java_org_lwjgl_opencl_CL10_nclCreateProgramWithSource3(J
 	_ptr_i = 0;
 	while ( _ptr_i < count ) {
 		_ptr_object = (*env)->GetObjectArrayElement(env, strings, _ptr_i);
-		strings_ptr[_ptr_i++] = (cl_char *)(intptr_t)getPointerWrapperAddress(env, _ptr_object);
+		strings_ptr[_ptr_i++] = (cl_char *)(*env)->GetDirectBufferAddress(env, _ptr_object);
 	}
 	__result = clCreateProgramWithSource((cl_context)(intptr_t)context, count, (const cl_char **)strings_ptr, lengths_address, errcode_ret_address);
 	free(strings_ptr);
@@ -412,7 +412,7 @@ JNIEXPORT jlong JNICALL Java_org_lwjgl_opencl_CL10_nclCreateProgramWithSource3(J
 
 JNIEXPORT jlong JNICALL Java_org_lwjgl_opencl_CL10_nclCreateProgramWithSource4(JNIEnv *env, jclass clazz, jlong context, jint count, jlong strings, jlong lengths, jlong errcode_ret, jlong function_pointer) {
 	const cl_char *strings_address = (const cl_char *)(intptr_t)strings;
-	unsigned int _str_i;
+	int _str_i;
 	cl_char *_str_address;
 	cl_char **strings_str = (cl_char **) malloc(count * sizeof(cl_char *));
 	const size_t *lengths_address = (const size_t *)(intptr_t)lengths;
@@ -443,7 +443,7 @@ JNIEXPORT jlong JNICALL Java_org_lwjgl_opencl_CL10_nclCreateProgramWithBinary2(J
 	const cl_device_id *device_list_address = (const cl_device_id *)(intptr_t)device_list;
 	const size_t *lengths_address = (const size_t *)(intptr_t)lengths;
 	const cl_uchar *binaries_address = (const cl_uchar *)(intptr_t)binaries;
-	unsigned int _str_i;
+	int _str_i;
 	cl_uchar *_str_address;
 	cl_uchar **binaries_str = (cl_uchar **) malloc(num_devices * sizeof(cl_uchar *));
 	cl_int *binary_status_address = (cl_int *)(intptr_t)binary_status;
@@ -464,7 +464,7 @@ JNIEXPORT jlong JNICALL Java_org_lwjgl_opencl_CL10_nclCreateProgramWithBinary2(J
 JNIEXPORT jlong JNICALL Java_org_lwjgl_opencl_CL10_nclCreateProgramWithBinary3(JNIEnv *env, jclass clazz, jlong context, jint num_devices, jlong device_list, jlong lengths, jobjectArray binaries, jlong binary_status, jlong errcode_ret, jlong function_pointer) {
 	const cl_device_id *device_list_address = (const cl_device_id *)(intptr_t)device_list;
 	const size_t *lengths_address = (const size_t *)(intptr_t)lengths;
-	unsigned int _ptr_i;
+	int _ptr_i;
 	jobject _ptr_object;
 	cl_uchar **binaries_ptr = (cl_uchar **) malloc(num_devices * sizeof(cl_uchar *));
 	cl_int *binary_status_address = (cl_int *)(intptr_t)binary_status;
@@ -474,7 +474,7 @@ JNIEXPORT jlong JNICALL Java_org_lwjgl_opencl_CL10_nclCreateProgramWithBinary3(J
 	_ptr_i = 0;
 	while ( _ptr_i < num_devices ) {
 		_ptr_object = (*env)->GetObjectArrayElement(env, binaries, _ptr_i);
-		binaries_ptr[_ptr_i++] = (cl_uchar *)(intptr_t)getPointerWrapperAddress(env, _ptr_object);
+		binaries_ptr[_ptr_i++] = (cl_uchar *)(*env)->GetDirectBufferAddress(env, _ptr_object);
 	}
 	__result = clCreateProgramWithBinary((cl_context)(intptr_t)context, num_devices, device_list_address, lengths_address, (const cl_uchar **)binaries_ptr, binary_status_address, errcode_ret_address);
 	free(binaries_ptr);
@@ -515,39 +515,39 @@ JNIEXPORT jint JNICALL Java_org_lwjgl_opencl_CL10_nclGetProgramInfo(JNIEnv *env,
 	return __result;
 }
 
-JNIEXPORT jint JNICALL Java_org_lwjgl_opencl_CL10_nclGetProgramInfo2(JNIEnv *env, jclass clazz, jlong program, jint param_name, jlong param_value_size, jlong sizes, jlong param_value, jlong param_value_size_ret, jlong function_pointer) {
+JNIEXPORT jint JNICALL Java_org_lwjgl_opencl_CL10_nclGetProgramInfo2(JNIEnv *env, jclass clazz, jlong program, jint param_name, jlong sizes_len, jlong sizes, jlong param_value, jlong param_value_size_ret, jlong function_pointer) {
 	const size_t *sizes_address = (const size_t *)(intptr_t)sizes;
 	cl_uchar *param_value_address = (cl_uchar *)(intptr_t)param_value;
-	unsigned int _str_i;
+	int _str_i;
 	cl_uchar *_str_address;
-	cl_uchar **param_value_str = (cl_uchar **) malloc(param_value_size * sizeof(cl_uchar *));
+	cl_uchar **param_value_str = (cl_uchar **) malloc(sizes_len * sizeof(cl_uchar *));
 	size_t *param_value_size_ret_address = (size_t *)(intptr_t)param_value_size_ret;
 	clGetProgramInfoPROC clGetProgramInfo = (clGetProgramInfoPROC)((intptr_t)function_pointer);
 	cl_int __result;
 	_str_i = 0;
 	_str_address = (cl_uchar *)param_value_address;
-	while ( _str_i < param_value_size ) {
+	while ( _str_i < sizes_len ) {
 		param_value_str[_str_i] = _str_address;
 		_str_address += sizes_address[_str_i++];
 	}
-	__result = clGetProgramInfo((cl_program)(intptr_t)program, param_name, param_value_size, (cl_uchar **)param_value_str, param_value_size_ret_address);
+	__result = clGetProgramInfo((cl_program)(intptr_t)program, param_name, sizes_len * sizeof(cl_uchar *), (cl_uchar **)param_value_str, param_value_size_ret_address);
 	free(param_value_str);
 	return __result;
 }
 
-JNIEXPORT jint JNICALL Java_org_lwjgl_opencl_CL10_nclGetProgramInfo3(JNIEnv *env, jclass clazz, jlong program, jint param_name, jlong param_value_size, jobjectArray param_value, jlong param_value_size_ret, jlong function_pointer) {
-	unsigned int _ptr_i;
+JNIEXPORT jint JNICALL Java_org_lwjgl_opencl_CL10_nclGetProgramInfo3(JNIEnv *env, jclass clazz, jlong program, jint param_name, jlong param_value_len, jobjectArray param_value, jlong param_value_size_ret, jlong function_pointer) {
+	int _ptr_i;
 	jobject _ptr_object;
-	cl_uchar **param_value_ptr = (cl_uchar **) malloc(param_value_size * sizeof(cl_uchar *));
+	cl_uchar **param_value_ptr = (cl_uchar **) malloc(param_value_len * sizeof(cl_uchar *));
 	size_t *param_value_size_ret_address = (size_t *)(intptr_t)param_value_size_ret;
 	clGetProgramInfoPROC clGetProgramInfo = (clGetProgramInfoPROC)((intptr_t)function_pointer);
 	cl_int __result;
 	_ptr_i = 0;
-	while ( _ptr_i < param_value_size ) {
+	while ( _ptr_i < param_value_len ) {
 		_ptr_object = (*env)->GetObjectArrayElement(env, param_value, _ptr_i);
-		param_value_ptr[_ptr_i++] = (cl_uchar *)(intptr_t)getPointerWrapperAddress(env, _ptr_object);
+		param_value_ptr[_ptr_i++] = (cl_uchar *)(*env)->GetDirectBufferAddress(env, _ptr_object);
 	}
-	__result = clGetProgramInfo((cl_program)(intptr_t)program, param_name, param_value_size, (cl_uchar **)param_value_ptr, param_value_size_ret_address);
+	__result = clGetProgramInfo((cl_program)(intptr_t)program, param_name, param_value_len * sizeof(cl_uchar *), (cl_uchar **)param_value_ptr, param_value_size_ret_address);
 	free(param_value_ptr);
 	return __result;
 }
@@ -632,7 +632,7 @@ JNIEXPORT jint JNICALL Java_org_lwjgl_opencl_CL10_nclEnqueueTask(JNIEnv *env, jc
 
 JNIEXPORT jint JNICALL Java_org_lwjgl_opencl_CL10_nclEnqueueNativeKernel(JNIEnv *env, jclass clazz, jlong command_queue, jlong user_func, jlong args, jlong cb_args, jint num_mem_objects, jobjectArray mem_list, jint num_events_in_wait_list, jlong event_wait_list, jlong event, jlong function_pointer) {
 	cl_void *args_address = (cl_void *)(intptr_t)args;
-	unsigned int _ptr_i;
+	int _ptr_i;
 	jobject _ptr_object;
 	cl_mem *mem_list_ptr = num_mem_objects == 0 ? NULL : (cl_mem *) malloc(num_mem_objects * sizeof(cl_mem ));
 	const cl_event *event_wait_list_address = (const cl_event *)(intptr_t)event_wait_list;

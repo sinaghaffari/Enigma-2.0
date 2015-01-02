@@ -31,12 +31,12 @@
  */
 
 /**
- * $Id: display.c 2985 2008-04-07 18:42:36Z matzon $
+ * $Id$
  *
  * Windows specific library for display handling.
  *
  * @author cix_foo <cix_foo@users.sourceforge.net>
- * @version $Revision: 2985 $
+ * @version $Revision$
  */
 
 #include <windows.h>
@@ -95,7 +95,7 @@ jobjectArray getAvailableDisplayModes(JNIEnv * env) {
 		while(EnumDisplaySettings((const char *) DisplayDevice.DeviceName, j++, &DevMode) != 0) {*/
 		while(EnumDisplaySettings(NULL, j++, &DevMode) != 0) {
 			// Filter out indexed modes
-			if (DevMode.dmBitsPerPel > 8 && ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN | CDS_TEST) == DISP_CHANGE_SUCCESSFUL) {
+			if (DevMode.dmBitsPerPel > 8) {
 				jobject displayMode;
 				if (list_size <= n) {
 					list_size += 1;
@@ -203,7 +203,7 @@ jobject convertToNativeRamp(JNIEnv *env, jobject float_gamma_obj) {
 	float scaledRampEntry;
 	WORD rampEntry;
 	const float *gammaRamp = (const float *)(*env)->GetDirectBufferAddress(env, float_gamma_obj);
-	jint gamma_ramp_length = (*env)->GetDirectBufferCapacity(env, float_gamma_obj);
+	jint gamma_ramp_length = (jint)(*env)->GetDirectBufferCapacity(env, float_gamma_obj);
 	jobject native_ramp;
 	WORD *native_ramp_buffer;
 

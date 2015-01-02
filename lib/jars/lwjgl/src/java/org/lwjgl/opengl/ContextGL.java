@@ -51,8 +51,8 @@ import static org.lwjgl.opengl.GL11.*;
  * This class is thread-safe.
  *
  * @author elias_naur <elias_naur@users.sourceforge.net>
- * @version $Revision: 3751 $
- *          $Id: ContextGL.java 3751 2012-03-04 13:41:49Z kappa1 $
+ * @version $Revision$
+ *          $Id$
  */
 final class ContextGL implements Context {
 
@@ -253,8 +253,12 @@ final class ContextGL implements Context {
 		boolean was_current = isCurrent();
 		int error = GL_NO_ERROR;
 		if ( was_current ) {
-			if ( GLContext.getCapabilities() != null && GLContext.getCapabilities().OpenGL11 )
+			try {
+				// May fail on GLContext.getCapabilities()
 				error = glGetError();
+			} catch (Exception e) {
+				// ignore
+			}
 			releaseCurrent();
 		}
 		checkDestroy();

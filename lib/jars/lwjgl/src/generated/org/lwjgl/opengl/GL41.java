@@ -36,6 +36,11 @@ public final class GL41 {
 		GL_HIGH_INT = 0x8DF5;
 
 	/**
+	 * Accepted by the &lt;format&gt; parameter of most commands taking sized internal formats: 
+	 */
+	public static final int GL_RGB565 = 0x8D62;
+
+	/**
 	 *  Accepted by the &lt;pname&gt; parameter of ProgramParameteri and
 	 *  GetProgramiv:
 	 */
@@ -81,22 +86,6 @@ public final class GL41 {
 	public static final int GL_PROGRAM_PIPELINE_BINDING = 0x825A;
 
 	/**
-	 * Returned in the &lt;type&gt; parameter of GetActiveAttrib: 
-	 */
-	public static final int GL_DOUBLE_VEC2 = 0x8FFC,
-		GL_DOUBLE_VEC3 = 0x8FFD,
-		GL_DOUBLE_VEC4 = 0x8FFE,
-		GL_DOUBLE_MAT2 = 0x8F46,
-		GL_DOUBLE_MAT3 = 0x8F47,
-		GL_DOUBLE_MAT4 = 0x8F48,
-		GL_DOUBLE_MAT2x3 = 0x8F49,
-		GL_DOUBLE_MAT2x4 = 0x8F4A,
-		GL_DOUBLE_MAT3x2 = 0x8F4B,
-		GL_DOUBLE_MAT3x4 = 0x8F4C,
-		GL_DOUBLE_MAT4x2 = 0x8F4D,
-		GL_DOUBLE_MAT4x3 = 0x8F4E;
-
-	/**
 	 *  Accepted by the &lt;pname&gt; parameter of GetBooleanv, GetIntegerv, GetFloatv,
 	 *  GetDoublev and GetInteger64v:
 	 */
@@ -107,33 +96,10 @@ public final class GL41 {
 		GL_VIEWPORT_INDEX_PROVOKING_VERTEX = 0x825F;
 
 	/**
-	 * Accepted by the &lt;pname&gt; parameter of GetIntegeri_v: 
-	 */
-	public static final int GL_SCISSOR_BOX = 0xC10;
-
-	/**
-	 * Accepted by the &lt;pname&gt; parameter of GetFloati_v: 
-	 */
-	public static final int GL_VIEWPORT = 0xBA2;
-
-	/**
-	 * Accepted by the &lt;pname&gt; parameter of GetDoublei_v: 
-	 */
-	public static final int GL_DEPTH_RANGE = 0xB70;
-
-	/**
-	 * Accepted by the &lt;pname&gt; parameter of Enablei, Disablei, and IsEnabledi: 
-	 */
-	public static final int GL_SCISSOR_TEST = 0xC11;
-
-	/**
 	 *  Returned in the &lt;data&gt; parameter from a Get query with a &lt;pname&gt; of
 	 *  LAYER_PROVOKING_VERTEX or VIEWPORT_INDEX_PROVOKING_VERTEX:
 	 */
-	public static final int GL_FIRST_VERTEX_CONVENTION = 0x8E4D,
-		GL_LAST_VERTEX_CONVENTION = 0x8E4E,
-		GL_PROVOKING_VERTEX = 0x8E4F,
-		GL_UNDEFINED_VERTEX = 0x8260;
+	public static final int GL_UNDEFINED_VERTEX = 0x8260;
 
 	private GL41() {}
 

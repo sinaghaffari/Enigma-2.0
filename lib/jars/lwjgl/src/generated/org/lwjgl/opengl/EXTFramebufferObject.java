@@ -179,6 +179,7 @@ public final class EXTFramebufferObject {
 	 * <p>
 	 * @deprecated Will be removed in 3.0. Use {@link #glGetRenderbufferParameteriEXT} instead. 
 	 */
+	@Deprecated
 	public static int glGetRenderbufferParameterEXT(int target, int pname) {
 		return EXTFramebufferObject.glGetRenderbufferParameteriEXT(target, pname);
 	}
@@ -301,6 +302,7 @@ public final class EXTFramebufferObject {
 	 * <p>
 	 * @deprecated Will be removed in 3.0. Use {@link #glGetFramebufferAttachmentParameteriEXT} instead. 
 	 */
+	@Deprecated
 	public static int glGetFramebufferAttachmentParameterEXT(int target, int attachment, int pname) {
 		return EXTFramebufferObject.glGetFramebufferAttachmentParameteriEXT(target, attachment, pname);
 	}

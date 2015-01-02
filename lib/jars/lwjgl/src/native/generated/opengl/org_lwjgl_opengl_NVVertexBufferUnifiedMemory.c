@@ -71,7 +71,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_NVVertexBufferUnifiedMemory_nglVert
 	glVertexAttribIFormatNV(index, size, type, stride);
 }
 
-JNIEXPORT void JNICALL Java_org_lwjgl_opengl_NVVertexBufferUnifiedMemory_nglGetIntegerui64i_vNV(JNIEnv *env, jclass clazz, jint value, jint index, jlong result, jlong function_pointer) {
+JNIEXPORT void JNICALL Java_org_lwjgl_opengl_NVVertexBufferUnifiedMemory_nglGetIntegerui64i_1vNV(JNIEnv *env, jclass clazz, jint value, jint index, jlong result, jlong function_pointer) {
 	GLuint64EXT *result_address = (GLuint64EXT *)(intptr_t)result;
 	glGetIntegerui64i_vNVPROC glGetIntegerui64i_vNV = (glGetIntegerui64i_vNVPROC)((intptr_t)function_pointer);
 	glGetIntegerui64i_vNV(value, index, result_address);

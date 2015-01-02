@@ -58,8 +58,8 @@ import static org.lwjgl.opengl.GL32.*;
  * That way, multiple threads can have multiple contexts current and render to them concurrently.
  *
  * @author elias_naur <elias_naur@users.sourceforge.net>
- * @version $Revision: 3797 $
- *          $Id: GLContext.java 3797 2012-09-06 07:11:54Z spasi $
+ * @version $Revision$
+ *          $Id$
  */
 public final class GLContext {
 
@@ -243,10 +243,10 @@ public final class GLContext {
 		}
 
 		final int[][] GL_VERSIONS = {
-			{ 1, 2, 3, 4, 5 },  // OpenGL 1
-			{ 0, 1 },           // OpenGL 2
-			{ 0, 1, 2, 3 },     // OpenGL 3
-			{ 0, 1, 2 },        // OpenGL 4
+			{ 1, 2, 3, 4, 5 },      // OpenGL 1
+			{ 0, 1 },               // OpenGL 2
+			{ 0, 1, 2, 3 },         // OpenGL 3
+			{ 0, 1, 2, 3, 4, 5 },   // OpenGL 4
 		};
 
 		for ( int major = 1; major <= GL_VERSIONS.length; major++ ) {

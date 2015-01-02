@@ -45,8 +45,8 @@ import org.lwjgl.Sys;
  * This class is thread-safe.
  *
  * @author elias_naur <elias_naur@users.sourceforge.net>
- * @version $Revision: 3632 $
- * $Id: Pbuffer.java 3632 2011-09-03 18:52:45Z spasi $
+ * @version $Revision$
+ * $Id$
  */
 public final class Pbuffer extends DrawableGL {
 	/**

@@ -31,6 +31,8 @@
  */
 package org.lwjgl.util.applet;
 
+import org.lwjgl.LWJGLUtil;
+
 import java.applet.Applet;
 import java.applet.AppletStub;
 import java.awt.BorderLayout;
@@ -56,7 +58,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.JarURLConnection;
 import java.net.SocketPermission;
@@ -70,7 +71,6 @@ import java.security.CodeSource;
 import java.security.PermissionCollection;
 import java.security.Permissions;
 import java.security.PrivilegedExceptionAction;
-import java.security.SecureClassLoader;
 import java.security.cert.Certificate;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -113,6 +113,7 @@ import java.util.zip.ZipFile;
  * <li>al_mac - [String] Jar containing native files for mac.</li>
  * <li>al_solaris - [String] Jar containing native files for solaris.</li>
  * <li>al_freebsd - [String] Jar containing native files for freebsd.</li>
+ * <li>al_openbsd - [String] Jar containing native files for openbsd.</li>
  * </ul>
  * </p>
  * <p>
@@ -777,6 +778,8 @@ public class AppletLoader extends Applet implements Runnable, AppletStub {
 			nativeJarList = getParameter("al_solaris");
 		} else if (osName.startsWith("FreeBSD")) {
 			nativeJarList = getParameter("al_freebsd");
+		} else if (osName.startsWith("OpenBSD")) {
+			nativeJarList = getParameter("al_openbsd");
 		} else {
 			fatalErrorOccured("OS (" + osName + ") not supported", null);
 			return;
@@ -1189,24 +1192,16 @@ public class AppletLoader extends Applet implements Runnable, AppletStub {
 				PermissionCollection perms = null;
 
 				try {
-					
-					// if mac, apply workaround for the multiple security dialog issue
-					if (isMacOS) {
-						// if certificates match the AppletLoader certificates then don't use SecureClassLoader to get further permissions
-						if (certificatesMatch(certs, codesource.getCertificates())) {
-							perms = new Permissions();
-							perms.add(new AllPermission());
-							return perms;
-						}
-					}
+                    // no permissions
+                    perms = new Permissions();
 
-					// getPermissions from original classloader is important as it checks for signed jars and shows any security dialogs needed
-					Method method = SecureClassLoader.class.getDeclaredMethod("getPermissions", new Class[] { CodeSource.class });
-					method.setAccessible(true);
-					perms = (PermissionCollection)method.invoke(getClass().getClassLoader(), new Object[] {codesource});
+                    // if certificates match the AppletLoader certificates then we should be all set
+                    if (certificatesMatch(certs, codesource.getCertificates())) {
+                        perms.add(new AllPermission());
+                        return perms;
+                    }
 
 					String host = getCodeBase().getHost();
-
 			        if (host != null && (host.length() > 0)) {
 			        	// add permission for downloaded jars to access host they were from
 			        	perms.add(new SocketPermission(host, "connect,accept"));
@@ -1226,7 +1221,7 @@ public class AppletLoader extends Applet implements Runnable, AppletStub {
 			
 			// allow non lwjgl native to be found from cache directory
 			protected String findLibrary (String libname) {
-				String libPath = path + "natives" + File.separator + System.mapLibraryName(libname);
+				String libPath = path + "natives" + File.separator + LWJGLUtil.mapLibraryName(libname);
 				
 				if (new File(libPath).exists()) {
 					return libPath;
@@ -1877,8 +1872,8 @@ public class AppletLoader extends Applet implements Runnable, AppletStub {
 	/**
 	 * Compare two certificate chains to see if they match
 	 *
-	 * @param cert1 first chain of certificates
-	 * @param cert2 second chain of certificates
+	 * @param certs1 first chain of certificates
+	 * @param certs2 second chain of certificates
 	 * 
 	 * @return true if the certificate chains are the same
 	 */
@@ -2234,7 +2229,7 @@ public class AppletLoader extends Applet implements Runnable, AppletStub {
 
 	/** 
 	 * set the state of applet loader 
-	 * @param new state of applet loader
+	 * @param state new state of applet loader
 	 * */
 	protected void setState(int state) {
 		this.state = state;

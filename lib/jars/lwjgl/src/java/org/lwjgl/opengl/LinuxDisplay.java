@@ -45,6 +45,7 @@ import java.awt.event.FocusEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.ByteOrder;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -128,7 +129,6 @@ final class LinuxDisplay implements DisplayImplementation {
 	private DisplayMode saved_mode;
 	private DisplayMode current_mode;
 
-	private Screen[] savedXrandrConfig;
 
 	private boolean keyboard_grabbed;
 	private boolean pointer_grabbed;
@@ -159,6 +159,8 @@ final class LinuxDisplay implements DisplayImplementation {
 
 	private LinuxKeyboard keyboard;
 	private LinuxMouse mouse;
+	
+	private String wm_class;
 
 	private final FocusListener focus_listener = new FocusListener() {
 		public void focusGained(FocusEvent e) {
@@ -460,15 +462,18 @@ final class LinuxDisplay implements DisplayImplementation {
 				ByteBuffer handle = peer_info.lockAndGetHandle();
 				try {
 					current_window_mode = getWindowMode(Display.isFullscreen());
+					
 					// Try to enable Lecagy FullScreen Support in Compiz, else
 					// we may have trouble with stuff overlapping our fullscreen window.
 					if ( current_window_mode != WINDOWED )
 						Compiz.setLegacyFullscreenSupport(true);
+					
 					// Setting _MOTIF_WM_HINTS in fullscreen mode is problematic for certain window
 					// managers. We do not set MWM_HINTS_DECORATIONS in fullscreen mode anymore,
 					// unless org.lwjgl.opengl.Window.undecorated_fs has been specified.
 					// See native/linux/org_lwjgl_opengl_Display.c, createWindow function.
 					boolean undecorated = Display.getPrivilegedBoolean("org.lwjgl.opengl.Window.undecorated") || (current_window_mode != WINDOWED && Display.getPrivilegedBoolean("org.lwjgl.opengl.Window.undecorated_fs"));
+					
 					this.parent = parent;
 					parent_window = parent != null ? getHandle(parent) : getRootWindow(getDisplay(), getDefaultScreen());
 					resizable = Display.isResizable();
@@ -477,7 +482,23 @@ final class LinuxDisplay implements DisplayImplementation {
 					window_y = y;
 					window_width = mode.getWidth();
 					window_height = mode.getHeight();
+
+                                        // overwrite arguments x and y - superclass always uses 0,0 for fullscreen windows
+                                        // use the coordinates of XRandRs primary screen instead
+                                        // this is required to let the fullscreen window appear on the primary screen
+                                        if (mode.isFullscreenCapable()  && current_displaymode_extension == XRANDR) {
+                                            Screen primaryScreen = XRandR.DisplayModetoScreen(Display.getDisplayMode());
+                                            x = primaryScreen.xPos;
+                                            y = primaryScreen.yPos;
+                                        }
+
 					current_window = nCreateWindow(getDisplay(), getDefaultScreen(), handle, mode, current_window_mode, x, y, undecorated, parent_window, resizable);
+					
+					// Set the WM_CLASS hint which is needed by some WM's e.g. Gnome Shell
+					wm_class = Display.getPrivilegedString("LWJGL_WM_CLASS");
+					if (wm_class == null) wm_class = Display.getTitle();
+					setClassHint(Display.getTitle(), wm_class);
+					
 					mapRaised(getDisplay(), current_window);
 					xembedded = parent != null && isAncestorXEmbedded(parent_window);
 					blank_cursor = createBlankCursor();
@@ -590,12 +611,17 @@ final class LinuxDisplay implements DisplayImplementation {
 	}
 
 	private void switchDisplayModeOnTmpDisplay(DisplayMode mode) throws LWJGLException {
-		incDisplay();
-		try {
-			nSwitchDisplayMode(getDisplay(), getDefaultScreen(), current_displaymode_extension, mode);
-		} finally {
-			decDisplay();
-		}
+                if (current_displaymode_extension == XRANDR) {
+                        // let Xrandr set the display mode
+                        XRandR.setConfiguration(false, XRandR.DisplayModetoScreen(mode));
+                } else {
+                        incDisplay();
+                        try {
+                                nSwitchDisplayMode(getDisplay(), getDefaultScreen(), current_displaymode_extension, mode);
+                        } finally {
+                                decDisplay();
+                        }
+                }
 	}
 	private static native void nSwitchDisplayMode(long display, int screen, int extension, DisplayMode mode) throws LWJGLException;
 
@@ -612,11 +638,11 @@ final class LinuxDisplay implements DisplayImplementation {
 	public void resetDisplayMode() {
 		lockAWT();
 		try {
-			if( current_displaymode_extension == XRANDR && savedXrandrConfig.length > 0 )
+			if( current_displaymode_extension == XRANDR )
 			{
 				AccessController.doPrivileged(new PrivilegedAction<Object>() {
 					public Object run() {
-						XRandR.setConfiguration( savedXrandrConfig );
+						XRandR.restoreConfiguration();
 						return null;
 					}
 				});
@@ -714,12 +740,12 @@ final class LinuxDisplay implements DisplayImplementation {
 				throw new LWJGLException("No modes available");
 			switch (current_displaymode_extension) {
 				case XRANDR:
-					savedXrandrConfig = AccessController.doPrivileged(new PrivilegedAction<Screen[]>() {
-						public Screen[] run() {
-							return XRandR.getConfiguration();
+					saved_mode = AccessController.doPrivileged(new PrivilegedAction<DisplayMode>() {
+						public DisplayMode run() {
+							XRandR.saveConfiguration();
+                                                        return XRandR.ScreentoDisplayMode(XRandR.getConfiguration());
 						}
 					});
-					saved_mode = getCurrentXRandrMode();
 					break;
 				case XF86VIDMODE:
 					saved_mode = modes[0];
@@ -761,8 +787,25 @@ final class LinuxDisplay implements DisplayImplementation {
 		} finally {
 			unlockAWT();
 		}
+		
+		// also update the class hint value as some WM's use it for the window title
+		if (Display.isCreated()) setClassHint(title, wm_class);
 	}
 	private static native void nSetTitle(long display, long window, long title, int len);
+	
+	/** the WM_CLASS hint is needed by some WM's e.g. gnome shell */
+	private void setClassHint(String wm_name, String wm_class) {
+		lockAWT();
+		try {
+			final ByteBuffer nameText = MemoryUtil.encodeUTF8(wm_name);
+			final ByteBuffer classText = MemoryUtil.encodeUTF8(wm_class);
+			
+			nSetClassHint(getDisplay(), getWindow(), MemoryUtil.getAddress(nameText), MemoryUtil.getAddress(classText));
+		} finally {
+			unlockAWT();
+		}
+	}
+	private static native void nSetClassHint(long display, long window, long wm_name, long wm_class);
 
 	public boolean isCloseRequested() {
 		boolean result = close_requested;
@@ -899,13 +942,29 @@ final class LinuxDisplay implements DisplayImplementation {
 	public DisplayMode[] getAvailableDisplayModes() throws LWJGLException {
 		lockAWT();
 		try {
-			incDisplay();
-			try {
-				DisplayMode[] modes = nGetAvailableDisplayModes(getDisplay(), getDefaultScreen(), current_displaymode_extension);
-				return modes;
-			} finally {
-				decDisplay();
-			}
+                        incDisplay();
+                        if (current_displaymode_extension == XRANDR) {
+                                // nGetAvailableDisplayModes cannot be trusted. Use it only for bitsPerPixel
+                                DisplayMode[] nDisplayModes = nGetAvailableDisplayModes(getDisplay(), getDefaultScreen(), current_displaymode_extension);
+                                int bpp = 24;
+                                if (nDisplayModes.length > 0) {
+                                    bpp = nDisplayModes[0].getBitsPerPixel();
+                                }
+                                // get the resolutions and frequencys from XRandR
+                                Screen[] resolutions = XRandR.getResolutions(XRandR.getScreenNames()[0]);
+                                DisplayMode[] modes = new DisplayMode[resolutions.length];
+                                for (int i = 0; i < modes.length; i++) {
+                                    modes[i] = new DisplayMode(resolutions[i].width, resolutions[i].height, bpp, resolutions[i].freq);
+                                }
+                                return modes;
+                        } else {
+                                try {
+                                        DisplayMode[] modes = nGetAvailableDisplayModes(getDisplay(), getDefaultScreen(), current_displaymode_extension);
+                                        return modes;
+                                } finally {
+                                        decDisplay();
+                                }
+                        }
 		} finally {
 			unlockAWT();
 		}
@@ -1066,16 +1125,18 @@ final class LinuxDisplay implements DisplayImplementation {
 	private void releaseInput() {
 		if (isLegacyFullscreen() || input_released)
 			return;
+		if ( keyboard != null )
+			keyboard.releaseAll();
 		input_released = true;
 		updateInputGrab();
 		if (current_window_mode == FULLSCREEN_NETWM) {
 			nIconifyWindow(getDisplay(), getWindow(), getDefaultScreen());
 			try {
-				if( current_displaymode_extension == XRANDR && savedXrandrConfig.length > 0 )
+				if( current_displaymode_extension == XRANDR )
 				{
 					AccessController.doPrivileged(new PrivilegedAction<Object>() {
 						public Object run() {
-							XRandR.setConfiguration( savedXrandrConfig );
+							XRandR.restoreConfiguration();
 							return null;
 						}
 					});
@@ -1302,50 +1363,58 @@ final class LinuxDisplay implements DisplayImplementation {
 	public void releaseTexImageFromPbuffer(PeerInfo handle, int buffer) {
 		throw new UnsupportedOperationException();
 	}
-
-	private static ByteBuffer convertIcon(ByteBuffer icon, int width, int height) {
-		ByteBuffer icon_rgb = BufferUtils.createByteBuffer(icon.capacity());
-		int x;
-		int y;
-		byte r,g,b;
-
-		int depth = 4;
-
-		for (y = 0; y < height; y++) {
-			for (x = 0; x < width; x++) {
-				r = icon.get((x*4)+(y*width*4));
-				g = icon.get((x*4)+(y*width*4)+1);
-				b = icon.get((x*4)+(y*width*4)+2);
-
-				icon_rgb.put((x*depth)+(y*width*depth), b); // blue
-				icon_rgb.put((x*depth)+(y*width*depth)+1, g); // green
-				icon_rgb.put((x*depth)+(y*width*depth)+2, r);
+	
+	/**
+	 * This method will convert icon bytebuffers into a single bytebuffer
+	 * as the icon format required by _NET_WM_ICON should be in a cardinal
+	 * 32 bit ARGB format i.e. all icons in a single buffer the data starting
+	 * with 32 bit width & height followed by the color data as 32bit ARGB.
+	 * 
+	 * @param icons Array of icons in RGBA format
+	 */
+	private static ByteBuffer convertIcons(ByteBuffer[] icons) {
+		
+		int bufferSize = 0;
+		
+		// calculate size of bytebuffer
+		for ( ByteBuffer icon : icons ) {
+			int size = icon.limit() / 4;
+			int dimension = (int)Math.sqrt(size);
+			if ( dimension > 0 ) {
+				bufferSize += 2 * 4; // add 32 bit width & height, 4 bytes each
+				bufferSize += dimension * dimension * 4;
 			}
 		}
-		return icon_rgb;
-	}
-
-	private static ByteBuffer convertIconMask(ByteBuffer icon, int width, int height) {
-		ByteBuffer icon_mask = BufferUtils.createByteBuffer((icon.capacity()/4)/8);
-		int x;
-		int y;
-		byte a;
-
-		int depth = 4;
-
-		for (y = 0; y < height; y++) {
-			for (x = 0; x < width; x++) {
-				a = icon.get((x*4)+(y*width*4)+3);
-
-				int mask_index = x + y*width;
-				int mask_byte_index = mask_index/8;
-				int mask_bit_index = mask_index%8;
-				byte bit = (((int)a) & 0xff) >= 127 ? (byte)1 : (byte)0;
-				byte new_byte = (byte)((icon_mask.get(mask_byte_index) | (bit<<mask_bit_index)) & 0xff);
-				icon_mask.put(mask_byte_index, new_byte);
+		
+		if (bufferSize == 0) return null;
+		
+		ByteBuffer icon_argb = BufferUtils.createByteBuffer(bufferSize);//icon.capacity()+(2*4));
+		icon_argb.order(ByteOrder.BIG_ENDIAN);
+		
+		for ( ByteBuffer icon : icons ) {
+			int size = icon.limit() / 4;
+			int dimension = (int)Math.sqrt(size);
+			
+			icon_argb.putInt(dimension); // width
+			icon_argb.putInt(dimension); // height
+			
+			for (int y = 0; y < dimension; y++) {
+				for (int x = 0; x < dimension; x++) {
+					
+					byte r = icon.get((x*4)+(y*dimension*4));
+					byte g = icon.get((x*4)+(y*dimension*4)+1);
+					byte b = icon.get((x*4)+(y*dimension*4)+2);
+					byte a = icon.get((x*4)+(y*dimension*4)+3);
+					
+					icon_argb.put(a);
+					icon_argb.put(r);
+					icon_argb.put(g);
+					icon_argb.put(b);
+				}
 			}
 		}
-		return icon_mask;
+		
+		return icon_argb;
 	}
 
 	/**
@@ -1365,17 +1434,11 @@ final class LinuxDisplay implements DisplayImplementation {
 		try {
 			incDisplay();
 			try {
-				for ( ByteBuffer icon : icons ) {
-					int size = icon.limit() / 4;
-					int dimension = (int)Math.sqrt(size);
-					if ( dimension > 0 ) {
-						ByteBuffer icon_rgb = convertIcon(icon, dimension, dimension);
-						ByteBuffer icon_mask = convertIconMask(icon, dimension, dimension);
-						nSetWindowIcon(getDisplay(), getWindow(), icon_rgb, icon_rgb.capacity(), icon_mask, icon_mask.capacity(), dimension, dimension);
-						return 1;
-					}
-				}
-				return 0;
+				// get icons as cardinal ARGB format
+				ByteBuffer icons_data = convertIcons(icons);
+				if (icons_data == null) return 0;
+				nSetWindowIcon(getDisplay(), getWindow(), icons_data, icons_data.capacity());//, icon_mask, icon_mask.capacity(), dimension, dimension);
+				return icons.length;
 			} finally {
 				decDisplay();
 			}
@@ -1387,7 +1450,7 @@ final class LinuxDisplay implements DisplayImplementation {
 		}
 	}
 
-	private static native void nSetWindowIcon(long display, long window, ByteBuffer icon_rgb, int icon_rgb_size, ByteBuffer icon_mask, int icon_mask_size, int width, int height);
+	private static native void nSetWindowIcon(long display, long window, ByteBuffer icons_data, int icons_size);
 
 	public int getX() {
 		return window_x;
@@ -1427,6 +1490,10 @@ final class LinuxDisplay implements DisplayImplementation {
 		return false;
 	}
 
+	public float getPixelScaleFactor() {
+		return 1f;
+	}
+	
 	/**
 	 * Helper class for managing Compiz's workarounds. We need this to enable Legacy
 	 * Fullscreen Support in Compiz, else we'll have trouble with fullscreen windows

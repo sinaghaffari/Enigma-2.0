@@ -39,18 +39,16 @@ import org.lwjgl.LWJGLUtil;
 /**
  *
  * @author elias_naur <elias_naur@users.sourceforge.net>
- * @version $Revision: 3634 $
- * $Id: MacOSXPeerInfo.java 3634 2011-09-05 08:44:48Z spasi $
+ * @version $Revision$
+ * $Id$
  */
 abstract class MacOSXPeerInfo extends PeerInfo {
 	MacOSXPeerInfo(PixelFormat pixel_format, ContextAttribs attribs, boolean use_display_bpp, boolean support_window, boolean support_pbuffer, boolean double_buffered) throws LWJGLException {
 		super(createHandle());
-		if (pixel_format.isFloatingPoint() && !LWJGLUtil.isMacOSXEqualsOrBetterThan(10, 4))
-			throw new LWJGLException("Floating point pixel format requested, but it requires MacOS X 10.4 or newer");
 
-		boolean gl32 = attribs != null && attribs.getMajorVersion() == 3 && attribs.getMinorVersion() == 2 && attribs.isProfileCore();
+		boolean gl32 = attribs != null && (3 < attribs.getMajorVersion() || (attribs.getMajorVersion() == 3 && 2 <= attribs.getMinorVersion())) && attribs.isProfileCore();
 		if ( gl32 && !LWJGLUtil.isMacOSXEqualsOrBetterThan(10, 7) )
-			throw new LWJGLException("OpenGL 3.2 requested, but it requires MacOS X 10.7 or newer");
+			throw new LWJGLException("OpenGL 3.2+ requested, but it requires MacOS X 10.7 or newer");
 
 		choosePixelFormat(pixel_format, gl32, use_display_bpp, support_window, support_pbuffer, double_buffered);
 	}
