@@ -182,7 +182,7 @@ public class Game {
 
             delta = getDelta();
             if ( gameState == GameState.GAME ) {
-                Mouse.setGrabbed( true );
+                Mouse.setGrabbed( false );
                 Keyboard.enableRepeatEvents( false );
                 if ( Mouse.isButtonDown( 1 ) ) {
                     EntityManager.addEntity( new EntityDummy( SVector2D.createVectorAlgebraically( Game.mapMouseX, Game.mapMouseY ), 0 ) );
